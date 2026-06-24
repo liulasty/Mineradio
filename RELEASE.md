@@ -1,79 +1,63 @@
 # 发布流程
 
+## v1.1.0 发布边界
+
+- `v1.1.0` 是纯净安装发布版，从当前 `resources/app` 可信源码重新构建。
+- 不复用旧 `dist/`、旧安装包、旧 `node_modules`、旧备份包或任何历史 packaged build。
+- 不生成 `v1.0.10 -> v1.1.0` 快速补丁。
+- 不把 `v1.1.0` 设置为旧版软件内更新通道的 latest；`v1.0.10` 用户需要手动下载新版安装包并纯净安装。
+- GitHub Release 需要明确提示：`v1.0.10` 及更早安装包有风险，请隔离旧 `.exe` 安装包，不要继续安装或转发。
+- 安装包样式继续沿用 `docs/INSTALLER_STYLE.md` 的中文极简黑白蓝格式。
+
 ## 发布前检查
 
-- 确认 `package.json` 版本号正确
-- 确认 `mineradio.update.owner/repo` 指向正式仓库
-- 确认 `.cookie`、`.qq-cookie`、`updates/`、`node_modules/` 没有进入 git
-- 确认 README/NOTICE 中包含 emily 共创致谢
-- 运行语法检查
-- 运行桌面应用进行基础功能验证
-- 生成 Windows 安装包
-- 用本地 `MINERADIO_UPDATE_MANIFEST` 模拟新版本，确认应用可以检测、下载并打开安装包
+- 确认 `package.json` 和 `package-lock.json` 版本号正确。
+- 确认 `mineradio.update.owner/repo` 指向正式仓库。
+- 确认 `.cookie`、`.qq-cookie`、`updates/`、`node_modules/`、旧 `dist/` 没有进入 git。
+- 确认 README/SECURITY/CHANGELOG/Release 正文包含 `v1.0.10` 旧安装包隔离说明。
+- 运行语法检查：`git diff --check`、`node --check server.js`、前端内联脚本解析。
+- 运行 Git 跟踪风险残留检查，确认没有跟踪 `.exe/.dll/.scr/.bat/.cmd/.ps1/.vbs/.jse/.wsf/.hta/.xlsm` 等可执行/脚本残留。
+- 从当前源码执行 `npm run build:win` 生成 Windows 安装包。
+- 对新生成的安装包和当前源码执行安全扫描。
+- 生成并记录新安装包 SHA256。
 
 ## GitHub Release
 
-Release tag 建议使用：
+Release tag：
 
 ```text
-v1.0.0
+v1.1.0
 ```
 
-Release 标题建议使用：
+Release 标题：
 
 ```text
-Mineradio v1.0.0
+Mineradio v1.1.0 纯净安装版
 ```
 
-Release 正文建议使用：
+建议上传资产：
 
-```markdown
-Mineradio v1.0.0 是 Mineradio 的首个正式发布版，把天气电台、首页内容、Wallpaper 银河背景、Emily 播放态视觉和 3D 歌单架整理成一个完整桌面体验。
+- `dist/Mineradio-1.1.0-Setup.exe`
+- `dist/Mineradio-1.1.0-Setup.exe.blockmap`（可选；本次不作为旧版软件内更新使用）
+- `dist/Mineradio-1.1.0-SHA256SUMS.txt`
 
-## 下载
+本次不要上传：
 
-- Windows 安装包：`Mineradio-1.0.0-Setup.exe`
-
-## 亮点
-
-- 新增 Open-Meteo 天气电台，会根据城市、天气和时间生成适合当前氛围的播放队列。
-- 首页升级为正式产品首屏，包含天气电台、每日推荐、私人电台、继续听、听歌画像和我的歌单。
-- 启动后未播放状态保持 Wallpaper 银河背景，不叠加旧 idle 白点、灰点、斜线或中心光球。
-- 播放音乐后仍切换到 Emily / 默认播放态视觉，歌词舞台、粒子舞台和控制台保持完整。
-- 优化窗口模式下主页自适应，紧凑窗口中 6 张主卡片和推荐内容不再挤出首屏。
-- 天气电台过滤 AI / Suno / Udio / 白噪音 / 雨声助眠等低质结果，并优先混入每日推荐和私人推荐曲库。
-- 修复天气电台、歌单和 3D 歌单架播放链路的卡死/栈溢出风险，切歌、播放/暂停和上一首/下一首恢复稳定。
-- 调整播放器控制台显隐逻辑，播放和右键唤起 3D 歌单架时不再误弹出底部控制台。
-
-## 致谢
-
-Mineradio 由 XxHuberrr 主要设计与打造。emily 作为早期视觉底层想法与 `emily` 视觉预设改进方向的共创者和灵感来源之一，特此感谢。
-
-同时感谢小天才e宝、应春日、锋将军、軌跡、林中、骊、风痕、花椰菜🥦在早期体验、测试反馈和发布准备中的帮助。
-
-> 当前安装包暂未进行代码签名，Windows 可能显示安全提示。
-```
-
-Release 资产必须上传 Windows 安装包，而不是只上传源码或 `win-unpacked` 目录。
-
-建议上传：
-
-- `dist/Mineradio-1.0.0-Setup.exe`
-- `dist/latest.yml`（如果本次构建生成）
-- `dist/*.blockmap`（如果本次构建生成）
+- `latest.yml`
+- `v1.0.10 -> v1.1.0` 快速补丁
 
 ## 更新检测
 
-应用会请求 GitHub Releases latest。只有远端版本高于本地版本时，右上角更新入口才应显示真实更新内容。
+应用会请求 GitHub Releases latest。为了避免 `v1.0.10` 旧客户端通过软件内更新直接拉到 `v1.1.0`，本次 GitHub Release 不应设为旧更新通道的 latest。
 
-本地更新链路验证可以用临时 manifest：
+本地验证更新链路时，可以用临时 manifest：
 
 ```json
 {
-  "latestVersion": "0.9.10-test",
+  "latestVersion": "1.1.0-test",
   "release": {
-    "name": "Mineradio v0.9.10-test",
-    "downloadUrl": "http://127.0.0.1:3144/Mineradio-0.9.9-Setup.exe",
+    "name": "Mineradio v1.1.0-test",
+    "downloadUrl": "http://127.0.0.1:3144/Mineradio-1.1.0-Setup.exe",
     "notes": ["本地在线更新链路测试"]
   }
 }

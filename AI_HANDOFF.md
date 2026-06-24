@@ -2,6 +2,14 @@
 
 这个文件是给后续接管本工作区的 AI 看的。每次完成一个任务后，都要更新本文件的「工作日志」和「未完成事项」，让下一位接手者能快速知道用户偏好、当前状态和最近做过什么。
 
+## 当前权威入口（2026-06-24）
+
+- 当前真实代码/Git 仓库仍是 `E:\桌面\播放器软件\Mineradio\resources\app`。
+- 当前版本是 `v1.1.0` 纯净安装发布线；本轮已从当前可信源码重新生成 `dist/Mineradio-1.1.0-Setup.exe`。
+- `v1.0.10` 及更早旧安装包不再信任，需要在 GitHub Release/README/SECURITY 中标记隔离。
+- `v1.1.0` 不提供从 `v1.0.10` 的软件内本地更新，不上传 `latest.yml`，不生成 `v1.0.10 -> v1.1.0` 快速补丁。
+- 新对话优先读 `AGENTS.md`、`docs/PROJECT_MEMORY.md`、`docs/HANDOFF_NEXT_CHAT.md`；涉及安全重建或发布时再读 `docs/SECURITY_REBUILD_2026-06-24.md`。本文件下面包含较早历史记录，不能覆盖上述文件的当前结论。
+
 ## 用户偏好
 
 - 默认用中文沟通，语气直接、清楚、偏实干。
@@ -9,7 +17,7 @@
 - 除非用户明确要求“上传 GitHub / 推送 / push / 发布到 Release”，否则不要直接上传或推送到 GitHub；本地提交也要在最终说明里讲清楚。
 - 用户很在意视觉质感，尤其讨厌“默认白框”“太素”“没设计感”。Mineradio 视觉方向偏黑色、玻璃、舞台、音乐可视化。
 - 做网页、软件界面、安装器时，要优先考虑第一次打开的新用户是否知道软件是干什么的。
-- 发布软件时，不能只上传源码。GitHub Release 里要包含可运行安装包 exe、blockmap、latest.yml，必要时还要有补丁包。
+- 发布软件时，不能只上传源码。GitHub Release 通常要包含可运行安装包 exe；但 `v1.1.0` 安全发布例外，不上传 `latest.yml`，避免旧版软件内更新直接拉取。
 - 安装器默认安装目录优先使用 `D:\Mineradio`，并创建桌面快捷方式。
 - 更新逻辑优先轻量快速补丁；完整安装包作为兜底。
 - 搜索结果要尽量优先原唱/官方版本，不希望翻唱排在原唱前面。
@@ -30,11 +38,10 @@
 
 ### dist 发布区
 
-`dist` 根部只保留当前可发布资产：
+`dist` 根部只保留当前可发布资产。`v1.1.0` 安全发布只上传安装包、可选 blockmap 和 SHA256，不上传 `latest.yml`：
 
 - `Mineradio-<version>-Setup.exe`
 - `Mineradio-<version>-Setup.exe.blockmap`
-- `latest.yml`
 - `Mineradio-<from>-to-<to>.patch.json`
 
 其它内容放到：
@@ -64,6 +71,18 @@
 这个目录是人工归档区，不参与软件更新流程。
 
 ## 已完成工作日志
+
+### 2026-06-24
+
+- 将 `E:\Download\默认测试.json` 接入为首次启动默认用户存档和默认视觉参数；新增 `public/default-user-fx-archive.json`，并让没有本地用户存档的新用户自动得到「默认测试」槽位。
+- 更新 `CHANGELOG.md`、`README.md`、`SECURITY.md`、`RELEASE.md`、`docs/SECURITY_REBUILD_2026-06-24.md` 和 `docs/RELEASE_NOTES_v1.1.0.md`，恢复详细日志并写明 `v1.0.10` 旧安装包隔离、`v1.1.0` 纯净安装、不走软件内更新。
+- 已执行 `npm run build:win`，第一次被旧代理 `127.0.0.1:26001` 拦截，切到 `127.0.0.1:10808` 后打包成功。产物：`dist/Mineradio-1.1.0-Setup.exe`、`.blockmap`、`Mineradio-1.1.0-SHA256SUMS.txt`。
+- 已运行 `git diff --check`、`node --check server.js`、前端 5 个内联脚本解析、默认 JSON 解析、Git 跟踪高风险残留检查；Defender 对新安装包和 `win-unpacked` 扫描后 `Get-MpThreatDetection` 查询为空。
+- 检查并更新新对话交接：`docs/HANDOFF_NEXT_CHAT.md` 已改为当前 `v1.1.0` 源码安全重建状态。
+- 本轮交接检查开始时工作树为干净：`main...origin/main`；随后仅修改 `AI_HANDOFF.md`、`docs/HANDOFF_NEXT_CHAT.md`、`docs/PROJECT_MEMORY.md`，并新增 `docs/3D_PLAYLIST_SHELF_MEMORY.md`。
+- 已补全 3D 歌单架专项记忆：控制台模式、常驻/静态镜头、详情页层级、歌词避让、右键歌单架抑制底部控制台、不要推倒重做手感等边界写入 `docs/3D_PLAYLIST_SHELF_MEMORY.md`。
+- 项目记忆 `docs/PROJECT_MEMORY.md` 已包含 `2026-06-24 - 1.1.0 安全重建源码优先`，记录不要复用旧感染环境产出的安装包、旧 `dist`、旧 `node_modules` 或临时扫描资料。
+- 安全重建日志在 `docs/SECURITY_REBUILD_2026-06-24.md`，后续安装包发布必须从当前 Git-tracked 源码重新构建并扫描。
 
 ### 2026-06-18
 
@@ -141,6 +160,7 @@
 
 ## 未完成/待确认事项
 
+- `v1.1.0` 发布时不要上传 `latest.yml` 或快速补丁；Release 需要通过 `--latest=false` 或等价 API 避免成为旧版软件内更新通道的 latest。
 - 搜索结果排序仍需要继续优化：例如“日落大道”应优先梁博原唱，“Beauty and a Beat”应优先原唱/官方版本，避免翻唱排第一。
 - 3D 歌单架交互仍需继续优化：悬停展开和点击后可用状态之间要更丝滑，避免用户误以为悬停后可直接使用。
 - Home 页面与后方 3D 歌单架的交互穿透问题需要继续关注。
@@ -152,5 +172,5 @@
 2. 如果发现新问题，更新「未完成/待确认事项」。
 3. 如果整理了文件，更新「工作区地图」或「本地分区约定」。
 4. 如果改了代码，至少运行相关语法检查或构建检查。
-5. 如果改了安装包或更新逻辑，检查 `dist/latest.yml`、安装包、blockmap、GitHub Release 是否一致。
+5. 如果改了安装包或更新逻辑，检查安装包、blockmap、校验文件和 GitHub Release 是否一致；安全发布时特别确认不要误上传 `latest.yml`。
 6. 最后确认 `git status --short`，说明哪些已提交、哪些只是本地忽略产物。

@@ -72,6 +72,8 @@ body.desktop-shell #beat-chip{top:154px}
 body.desktop-shell #toast{top:60px}
 #fullscreen-diy-zone{display:none;position:fixed;z-index:520;top:var(--fullscreen-diy-top,24px);left:var(--fullscreen-diy-left,calc(100vw - 510px));width:var(--fullscreen-diy-width,128px);height:52px;align-items:center;justify-content:center;pointer-events:none;-webkit-app-region:no-drag}
 #fullscreen-diy-btn{min-width:108px;height:34px;opacity:0;pointer-events:none;transform:translateY(-18px) scale(.96);transition:opacity .2s cubic-bezier(.16,1,.3,1),transform .2s cubic-bezier(.16,1,.3,1),background .18s,color .18s,border-color .18s,box-shadow .18s}
+body.visual-guide-active #fullscreen-diy-zone{opacity:0;pointer-events:none!important;transition:opacity .18s cubic-bezier(.16,1,.3,1)}
+body.visual-guide-active #fullscreen-diy-btn{opacity:0!important;pointer-events:none!important;transform:translateY(-18px) scale(.96)!important}
 body.desktop-shell.desktop-fullscreen #desktop-titlebar,html:fullscreen body.desktop-shell #desktop-titlebar{display:none!important}
 body.desktop-shell.desktop-fullscreen #fullscreen-diy-zone,html:fullscreen body.desktop-shell #fullscreen-diy-zone{display:flex}
 body.fullscreen-diy-peek #fullscreen-diy-zone,#fullscreen-diy-zone:hover{pointer-events:auto}
@@ -206,10 +208,12 @@ body.empty-home-active.diy-mode #search-area:not(.has-results) #search-mode-tabs
 html.simple-mode-preload #search-mode-tabs,
 html.simple-mode-preload #upload-actions,
 html.simple-mode-preload #fx-fab,
+html.simple-mode-preload #fx-fab-hide-btn,
 html.simple-mode-preload #fx-panel,
 body.simple-mode #search-mode-tabs,
 body.simple-mode #upload-actions,
 body.simple-mode #fx-fab,
+body.simple-mode #fx-fab-hide-btn,
 body.simple-mode #fx-panel{display:none!important}
 html.simple-mode-preload #search-area,
 body.simple-mode #search-area{--search-offset:0;left:50%;width:min(620px,calc(100vw - 56px));transform:translateX(-50%);align-items:stretch}
@@ -984,7 +988,7 @@ body.login-guide-active #login-guide-canvas{opacity:1}
 .source-fallback-close:hover{background:rgba(255,255,255,.10);color:#fff}
 .source-fallback-body{font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.58)}
 
-#visual-guide{position:fixed;inset:0;z-index:260;display:none;pointer-events:auto;cursor:pointer}
+#visual-guide{position:fixed;inset:0;z-index:620;display:none;pointer-events:auto;cursor:pointer}
 #visual-guide.show{display:block}
 .visual-guide-scrim{position:absolute;inset:0;background:linear-gradient(120deg,rgba(244,210,138,.05),rgba(255,83,103,.035) 34%,rgba(9,10,14,.38) 58%,rgba(0,0,0,.66)),radial-gradient(circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.045),rgba(0,0,0,.36) 34%,rgba(0,0,0,.68));opacity:0;transition:opacity .28s cubic-bezier(.16,1,.3,1)}
 #visual-guide.show .visual-guide-scrim{opacity:1}
@@ -1026,8 +1030,8 @@ body.login-guide-active #login-guide-canvas{opacity:1}
 #fx-fab-hide-btn:hover,#fx-fab-hide-btn.on{border-color:rgba(var(--fc-accent-rgb),.34);background:rgba(var(--fc-accent-rgb),.10);color:#fff}
 body.fx-fab-auto-hide #fx-fab{right:-76px;opacity:0;visibility:hidden;pointer-events:none;transition:right .28s cubic-bezier(.16,1,.3,1),bottom .38s cubic-bezier(.16,1,.3,1),opacity .18s,visibility 0s linear .18s,transform .24s,background .28s,border-color .28s,color .28s,box-shadow .28s}
 body.fx-fab-auto-hide.fx-fab-peek #fx-fab{right:24px;opacity:1;visibility:visible;pointer-events:auto;transition:right .28s cubic-bezier(.16,1,.3,1),bottom .38s cubic-bezier(.16,1,.3,1),opacity .16s,transform .24s,background .28s,border-color .28s,color .28s,box-shadow .28s}
-body.fx-fab-auto-hide #fx-fab-hide-btn{right:8px;opacity:.62;transform:translateX(0) scale(1)}
-body.fx-fab-auto-hide.fx-fab-peek #fx-fab-hide-btn{right:84px;opacity:1}
+body.fx-fab-auto-hide #fx-fab-hide-btn{right:-76px;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(6px) scale(.92);transition:right .28s cubic-bezier(.16,1,.3,1),bottom .38s cubic-bezier(.16,1,.3,1),opacity .18s,visibility 0s linear .18s,transform .18s,background .18s,color .18s,border-color .18s}
+body.fx-fab-auto-hide.fx-fab-peek #fx-fab-hide-btn{right:84px;opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0) scale(1);transition:right .28s cubic-bezier(.16,1,.3,1),bottom .38s cubic-bezier(.16,1,.3,1),opacity .16s,transform .18s,background .18s,color .18s,border-color .18s}
 body.controls-visible #fx-fab-hide-btn,
 body.desktop-shell.diy-mode.controls-visible #fx-fab-hide-btn{bottom:139px}
 body.immersive-mode #fx-fab-hide-btn{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
@@ -2194,6 +2198,11 @@ html.control-glass-svg-ok #visual-guide-btn:hover{
         <button data-shelf-presence="auto" class="active">自动隐藏</button>
         <button data-shelf-presence="always">常驻</button>
       </div>
+      <div class="fx-section-label">歌单架内容</div>
+      <div class="fx-toggle-grid">
+        <div class="fx-toggle" id="t-shelfShowPodcasts" onclick="toggleFx('shelfShowPodcasts')" title="关闭后 3D 歌单架不显示播客收藏"><span>显示播客歌单</span><span class="dot"></span></div>
+        <div class="fx-toggle" id="t-shelfMergeCollections" onclick="toggleFx('shelfMergeCollections')" title="开启后我的歌单与收藏歌单按一条线连续滚动"><span>合并收藏歌单</span><span class="dot"></span></div>
+      </div>
       <div class="fx-section-label">歌单架外观</div>
       <div class="lyric-color-row">
         <input id="shelf-accent-picker" class="lyric-color-picker" type="color" value="#f4d28a" title="歌单架颜色">
@@ -2221,6 +2230,22 @@ html.control-glass-svg-ok #visual-guide-btn:hover{
       <span>高级参数</span><span class="arrow">▶</span>
     </div>
     <div class="fx-advanced-body">
+      <div class="fx-section-label">直播 / 后台</div>
+      <div class="fx-seg" id="performance-background-seg" title="控制窗口隐藏、最小化或后台运行时的渲染策略">
+        <button data-performance-background="auto">自动优化</button>
+        <button data-performance-background="keep">保持运行</button>
+        <button data-performance-background="release">停止释放</button>
+      </div>
+      <div class="fx-section-label">画质档位</div>
+      <div class="fx-seg" id="performance-quality-seg" title="控制可见状态下的渲染像素预算，重启后保留">
+        <button data-performance-quality="eco">低</button>
+        <button data-performance-quality="balanced">中</button>
+        <button data-performance-quality="high">高</button>
+        <button data-performance-quality="ultra">超高</button>
+      </div>
+      <div class="fx-toggle-grid">
+        <div class="fx-toggle" id="t-liveBackgroundKeep" onclick="toggleFx('liveBackgroundKeep')" title="开启后后台或最小化时保持视觉渲染，不进入低占用暂停"><span>直播后台保持</span><span class="dot"></span></div>
+      </div>
       <div class="fx-slider"><label>粒子尺寸</label><input id="fx-point" type="range" min="0.5" max="2.2" step="0.01"><output></output></div>
       <div class="fx-slider"><label>流速</label><input id="fx-speed" type="range" min="0.2" max="2.5" step="0.01"><output></output></div>
       <div class="fx-slider"><label>扭曲</label><input id="fx-twist" type="range" min="0" max="0.6" step="0.01"><output></output></div>
@@ -2650,6 +2675,7 @@ html.control-glass-svg-ok #visual-guide-btn:hover{
 //  Global State
 // ============================================================
 var audio = null, audioCtx = null, source = null, analyser = null, beatAnalyser = null, gainNode = null, audioReady = false;
+var uiSfxCtx = null, lastShelfSelectSfxAt = 0;
 var FFT_SIZE = 2048;
 var frequencyData = new Uint8Array(FFT_SIZE / 2);
 var timeDomainData = new Uint8Array(FFT_SIZE);
@@ -2877,9 +2903,16 @@ function updateUserCapsuleAutoHideFromPointer(x, y) {
   var nearTopRight = x > innerWidth - 112 && y < 126;
   document.body.classList.toggle('user-capsule-peek', nearTopRight);
 }
-function applyFxFabAutoHideState() {
+function applyFxFabAutoHideState(opts) {
+  opts = opts || {};
   document.body.classList.toggle('fx-fab-auto-hide', !!fxFabAutoHide);
-  if (!fxFabAutoHide) document.body.classList.remove('fx-fab-peek');
+  if (!fxFabAutoHide) {
+    document.body.classList.remove('fx-fab-peek');
+    fxFabAutoHideRevealArmed = true;
+  } else if (opts.forceHidden) {
+    document.body.classList.remove('fx-fab-peek');
+    fxFabAutoHideRevealArmed = false;
+  }
   var btn = document.getElementById('fx-fab-hide-btn');
   if (btn) {
     btn.classList.toggle('on', !!fxFabAutoHide);
@@ -2891,18 +2924,20 @@ function toggleFxFabAutoHide(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   fxFabAutoHide = !fxFabAutoHide;
   saveBooleanPreference(FX_FAB_AUTO_HIDE_STORE_KEY, fxFabAutoHide);
-  applyFxFabAutoHideState();
+  applyFxFabAutoHideState({ forceHidden: fxFabAutoHide });
   showToast(fxFabAutoHide ? '视觉控制台按钮已自动隐藏' : '视觉控制台按钮已固定显示');
 }
 function updateFxFabAutoHideFromPointer(x, y) {
   if (!fxFabAutoHide || !diyPlayerMode || immersiveMode) {
     document.body.classList.remove('fx-fab-peek');
+    fxFabAutoHideRevealArmed = true;
     return;
   }
   var panel = document.getElementById('fx-panel');
   var panelOpen = !!(panel && (panel.classList.contains('peek') || panel.classList.contains('show')));
   var nearBottomRight = x > innerWidth - 126 && y > innerHeight - 158;
-  document.body.classList.toggle('fx-fab-peek', panelOpen || nearBottomRight);
+  if (!nearBottomRight) fxFabAutoHideRevealArmed = true;
+  document.body.classList.toggle('fx-fab-peek', panelOpen || (nearBottomRight && fxFabAutoHideRevealArmed));
 }
 function layoutFullscreenDiyZone() {
   var width = innerWidth < 820 ? 104 : 128;
@@ -2925,9 +2960,16 @@ function layoutFullscreenDiyZone() {
   document.documentElement.style.setProperty('--fullscreen-diy-width', width + 'px');
   return { left: left, top: top, width: width, height: height };
 }
+function shouldSuppressFullscreenDiyPeek() {
+  var fxPanel = document.getElementById('fx-panel');
+  var hotkeyModal = document.getElementById('hotkey-modal');
+  var fxPanelOpen = !!(fxPanel && (fxPanel.classList.contains('peek') || fxPanel.classList.contains('show')));
+  var hotkeyOpen = !!(hotkeyModal && hotkeyModal.classList.contains('show'));
+  return !!(visualGuideActive || fxPanelOpen || hotkeyOpen);
+}
 function updateFullscreenDiyPeekFromPointer(x, y) {
   var isFullscreen = !!(desktopRuntimeState.fullscreen || desktopFullscreenActive || document.fullscreenElement || document.body.classList.contains('desktop-fullscreen'));
-  if (!isFullscreen || immersiveMode) {
+  if (!isFullscreen || immersiveMode || shouldSuppressFullscreenDiyPeek()) {
     document.body.classList.remove('fullscreen-diy-peek');
     return;
   }
@@ -3154,12 +3196,12 @@ function maybeAnnounceDjMode() {
 var fxDefaults = {
   preset: 0,            // 0=emily cover, 1=tunnel, 2=orbit, 3=void, 4=vinyl, 5=wallpaper, 6=skull
   intensity: 0.85,
-  cinemaShake: 1.0,
+  cinemaShake: 0.5,
   depth: 1.0,
-  coverResolution: 1.0,
-  point: 0.82, speed: 1.0, twist: 0.0, color: 1.10, scatter: 0.0, bgFade: 0.20,
+  coverResolution: 1.55,
+  point: 1.0, speed: 1.0, twist: 0.0, color: 1.10, scatter: 0.0, bgFade: 0.20,
   bloomStrength: 0.62,
-  lyricGlowStrength: 0.35,
+  lyricGlowStrength: 0.28,
   lyricScale: 1.0,
   lyricOffsetX: 0,
   lyricOffsetY: 0,
@@ -3169,19 +3211,19 @@ var fxDefaults = {
   lyricColorMode: 'auto',
   lyricColor: '#a9b8c8',
   lyricHighlightMode: 'auto',
-  lyricHighlightColor: '#fff0b8',
+  lyricHighlightColor: '#fac900',
   lyricGlowLinked: true,
-  lyricGlowColor: '#9db8cf',
-  lyricFont: 'sans',
+  lyricGlowColor: '#008aff',
+  lyricFont: 'hei',
   lyricLetterSpacing: 0,
   lyricLineHeight: 1.0,
   lyricWeight: 900,
   visualTintMode: 'auto',
   visualTintColor: '#9db8cf',
-  uiAccentColor: '#00f5d4',
-  homeAccentColor: '#00f5d4',
-  homeIconColor: '#f4d28a',
-  visualIconColor: '#7fd8ff',
+  uiAccentColor: '#ffffff',
+  homeAccentColor: '#ffffff',
+  homeIconColor: '#ffffff',
+  visualIconColor: '#ffffff',
   backgroundColorMode: 'cover',
   backgroundColor: '#000000',
   backgroundOpacity: 1,
@@ -3193,7 +3235,7 @@ var fxDefaults = {
   desktopLyricsSize: 1.0,
   desktopLyricsOpacity: 0.92,
   desktopLyricsY: 0.76,
-  desktopLyricsClickThrough: true,
+  desktopLyricsClickThrough: false,
   desktopLyricsCinema: true,
   desktopLyricsHighlight: false,
   desktopLyricsFps: 60,
@@ -3206,18 +3248,113 @@ var fxDefaults = {
   particleLyrics: true,    // v7.2: 粒子歌词
   backCover: false,        // 旧的封面背面粒子层关闭；浮空粒子层会跟随封面翻转
   shelf: 'side',
-  shelfCameraMode: 'dynamic',
-  shelfPresence: 'auto',
+  shelfCameraMode: 'static',
+  shelfPresence: 'always',
+  shelfShowPodcasts: false,
+  shelfMergeCollections: false,
   shelfSize: 1,
   shelfOffsetX: 0,
   shelfOffsetY: 0,
   shelfOffsetZ: 0,
-  shelfAngleY: 0,
+  shelfAngleY: -15,
+  shelfAngleYManual: false,
   shelfOpacity: 1,
   shelfBgOpacity: 0.90,
-  shelfAccentColor: '#f4d28a',
+  shelfAccentColor: '#ffffff',
+  performanceBackground: 'auto',
+  performanceQuality: 'high',
+  liveBackgroundKeep: false,
   cam: 'off',
 };
+var PACKAGED_DEFAULT_USER_FX_ARCHIVE_NAME = '默认测试';
+var PACKAGED_DEFAULT_USER_FX_ARCHIVE_EXPORTED_AT = 1782276031784;
+var PACKAGED_DEFAULT_USER_FX_ARCHIVE_SAVED_AT = 1782273019045;
+var PACKAGED_DEFAULT_FX_SNAPSHOT = Object.freeze({
+  visualPresetSchema: VISUAL_PRESET_SCHEMA,
+  preset: 0,
+  intensity: 0.85,
+  cinemaShake: 0.5,
+  depth: 1,
+  coverResolution: 1.55,
+  point: 1,
+  speed: 1,
+  twist: 0,
+  color: 1.1,
+  scatter: 0,
+  bgFade: 0.2,
+  bloomStrength: 0.62,
+  lyricGlowStrength: 0.28,
+  lyricScale: 1,
+  lyricOffsetX: 0,
+  lyricOffsetY: 0,
+  lyricOffsetZ: 0,
+  lyricTiltX: 0,
+  lyricTiltY: 0,
+  lyricCameraLock: false,
+  lyricColorMode: 'auto',
+  lyricColor: '#a9b8c8',
+  lyricHighlightMode: 'auto',
+  lyricHighlightColor: '#fac900',
+  lyricGlowLinked: true,
+  lyricGlowColor: '#008aff',
+  lyricFont: 'hei',
+  lyricLetterSpacing: 0,
+  lyricLineHeight: 1,
+  lyricWeight: 900,
+  visualTintMode: 'auto',
+  visualTintColor: '#9db8cf',
+  uiAccentColor: '#ffffff',
+  homeAccentColor: '#ffffff',
+  homeIconColor: '#ffffff',
+  visualIconColor: '#ffffff',
+  backgroundColorMode: 'cover',
+  backgroundColor: '#000000',
+  backgroundOpacity: 1,
+  controlGlassChromaticOffset: 90,
+  backgroundColorCustom: false,
+  floatLayer: false,
+  cinema: true,
+  edge: false,
+  aiDepth: false,
+  bloom: false,
+  lyricGlow: true,
+  lyricGlowBeat: true,
+  lyricGlowParticles: false,
+  desktopLyrics: false,
+  desktopLyricsSize: 1,
+  desktopLyricsOpacity: 0.92,
+  desktopLyricsY: 0.76,
+  desktopLyricsClickThrough: false,
+  desktopLyricsCinema: true,
+  desktopLyricsHighlight: false,
+  desktopLyricsFps: 60,
+  performanceBackground: 'auto',
+  performanceQuality: 'high',
+  liveBackgroundKeep: false,
+  particleLyrics: true,
+  backCover: false,
+  shelf: 'side',
+  shelfCameraMode: 'static',
+  shelfPresence: 'always',
+  shelfShowPodcasts: false,
+  shelfMergeCollections: false,
+  shelfSize: 1,
+  shelfOffsetX: 0,
+  shelfOffsetY: 0,
+  shelfOffsetZ: 0,
+  shelfAngleY: -15,
+  shelfAngleYManual: false,
+  shelfOpacity: 1,
+  shelfBgOpacity: 0.9,
+  shelfAccentColor: '#ffffff',
+  cam: 'off'
+});
+function clonePackagedDefaultFxSnapshot() {
+  return Object.assign({}, PACKAGED_DEFAULT_FX_SNAPSHOT);
+}
+function packagedDefaultLyricLayoutRaw() {
+  return Object.assign({ desktopLyricsSchema: 'desktop-lyrics-v3' }, clonePackagedDefaultFxSnapshot());
+}
 var DEVELOPMENT_LOCKED_FX = {
   wallpaperMode: true
 };
@@ -3256,6 +3393,7 @@ var fxPanelPinned = false;
 var playlistPanelPinned = readBooleanPreference(PLAYLIST_PANEL_PIN_STORE_KEY, false);
 var userCapsuleAutoHide = readBooleanPreference(USER_CAPSULE_AUTO_HIDE_STORE_KEY, false);
 var fxFabAutoHide = readBooleanPreference(FX_FAB_AUTO_HIDE_STORE_KEY, false);
+var fxFabAutoHideRevealArmed = true;
 var hotkeySettings = readHotkeySettings();
 var immersiveMode = false;
 var immersiveState = {
@@ -3303,7 +3441,20 @@ var runtimePerfState = {
   cacheCounts: {}
 };
 function isDeepBackgroundMode() {
+  if (isLiveBackgroundKeepMode()) return false;
   return !!(document.hidden || desktopRuntimeState.minimized || desktopRuntimeState.visible === false);
+}
+function currentPerformanceBackgroundMode() {
+  return normalizePerformanceBackgroundMode(fx && fx.performanceBackground, fx && fx.liveBackgroundKeep === true);
+}
+function isLiveBackgroundKeepMode() {
+  return currentPerformanceBackgroundMode() === 'keep';
+}
+function isBackgroundReleaseMode() {
+  return currentPerformanceBackgroundMode() === 'release';
+}
+function isHiddenForBackgroundOptimization() {
+  return !!(document.hidden && !isLiveBackgroundKeepMode());
 }
 function isVisibleBackgroundMode() {
   return false;
@@ -3499,10 +3650,10 @@ function scheduleBackgroundCacheTrim() {
 function maybeTrimRuntimeCaches(now) {
   now = now || performance.now();
   var deep = isDeepBackgroundMode();
-  var gap = deep ? 7000 : 45000;
+  var gap = deep ? (isBackgroundReleaseMode() ? 3600 : 7000) : 45000;
   if (!deep && now < 30000) return;
   if (now - runtimePerfState.lastCacheTrimAt < gap) return;
-  trimRuntimeCaches(deep ? 'deep-frame' : 'active-frame', deep);
+  trimRuntimeCaches(deep ? (isBackgroundReleaseMode() ? 'release-frame' : 'deep-frame') : 'active-frame', deep);
 }
 function applyRendererPowerMode() {
   if (typeof renderer === 'undefined' || !renderer) return;
@@ -3582,13 +3733,21 @@ var RENDER_INTERACTION_HUGE_FPS = 0;
 var RENDER_INTERACTION_HOLD_MS = 900;
 var renderInteractionBoostUntil = 0;
 var renderInteractionReason = '';
+function renderQualityProfile() {
+  var quality = normalizePerformanceQuality(fx && fx.performanceQuality);
+  if (quality === 'eco') return { cap: 0.95, min: 0.56, budget: 2400000 };
+  if (quality === 'balanced') return { cap: 1.12, min: 0.66, budget: 3800000 };
+  if (quality === 'ultra') return { cap: 1.75, min: 0.85, budget: 7800000 };
+  return { cap: RENDER_DPR_CAP, min: RENDER_MIN_DPR, budget: RENDER_PIXEL_BUDGET };
+}
 function getRenderPixelRatio() {
   var device = window.devicePixelRatio || 1;
   if (isDeepBackgroundMode()) return Math.min(device, 0.30);
   var cssPixels = Math.max(1, innerWidth * innerHeight);
-  var budgetCap = Math.sqrt(RENDER_PIXEL_BUDGET / cssPixels);
-  var cap = Math.min(RENDER_DPR_CAP, budgetCap);
-  return Math.max(RENDER_MIN_DPR, Math.min(device, cap));
+  var quality = renderQualityProfile();
+  var budgetCap = Math.sqrt(quality.budget / cssPixels);
+  var cap = Math.min(quality.cap, budgetCap);
+  return Math.max(quality.min, Math.min(device, cap));
 }
 function getRenderPixelLoad() {
   var ratio = getRenderPixelRatio();
@@ -4135,7 +4294,7 @@ function beatEventTime(ev) {
 
 function yieldToPaint() {
   return new Promise(function(resolve) {
-    if (document.hidden || typeof requestAnimationFrame !== 'function') {
+    if (isHiddenForBackgroundOptimization() || typeof requestAnimationFrame !== 'function') {
       setTimeout(resolve, 0);
     } else {
       requestAnimationFrame(function(){ setTimeout(resolve, 0); });
@@ -4145,7 +4304,7 @@ function yieldToPaint() {
 
 function yieldToIdle(timeout) {
   return new Promise(function(resolve) {
-    if (document.hidden) {
+    if (isHiddenForBackgroundOptimization()) {
       setTimeout(resolve, Math.min(timeout || 80, 80));
       return;
     }
@@ -4159,7 +4318,7 @@ function yieldToIdle(timeout) {
 
 function scheduleAnalysisTask(fn, timeout) {
   if (typeof fn !== 'function') return;
-  if (document.hidden) {
+  if (isHiddenForBackgroundOptimization()) {
     setTimeout(fn, 0);
     return;
   }
@@ -4173,7 +4332,7 @@ function scheduleAnalysisTask(fn, timeout) {
 function scheduleVisualApply(fn, delay, timeout) {
   if (typeof fn !== 'function') return;
   setTimeout(function(){
-    if (document.hidden || typeof requestAnimationFrame !== 'function') {
+    if (isHiddenForBackgroundOptimization() || typeof requestAnimationFrame !== 'function') {
       fn();
       return;
     }
@@ -4186,7 +4345,7 @@ function scheduleVisualApply(fn, delay, timeout) {
 function scheduleUiWarmTask(fn, timeout) {
   if (typeof fn !== 'function') return;
   var run = function(){ requestAnimationFrame(fn); };
-  if (document.hidden || typeof requestAnimationFrame !== 'function') {
+  if (isHiddenForBackgroundOptimization() || typeof requestAnimationFrame !== 'function') {
     setTimeout(fn, 0);
   } else if (window.requestIdleCallback) {
     requestIdleCallback(run, { timeout: timeout || 220 });
@@ -4991,11 +5150,11 @@ function activateFocusZone(type) {
       camPunch = Math.max(camPunch, 0.30);
       requestStageLyricCameraSnap(10);
     } else {
-      orbit.focus.theta  = shelfProfile.portrait ? 0.20 : 0.46;
-      orbit.focus.phi    = shelfProfile.portrait ? -0.08 : -0.14;
-      orbit.focus.radius = shelfProfile.portrait ? 5.74 : 4.35;
-      orbit.focus.lookAt.set(shelfProfile.portrait ? 0.74 : 2.34, shelfProfile.portrait ? -0.38 : -0.34, 0.86);
-      camPunch = Math.max(camPunch, 0.92);
+      orbit.focus.theta  = shelfProfile.portrait ? 0.16 : 0.34;
+      orbit.focus.phi    = shelfProfile.portrait ? -0.03 : -0.06;
+      orbit.focus.radius = shelfProfile.portrait ? 5.90 : 4.86;
+      orbit.focus.lookAt.set(shelfProfile.portrait ? 0.62 : 1.74, shelfProfile.portrait ? -0.08 : 0.02, 0.82);
+      camPunch = Math.max(camPunch, 0.38);
     }
   } else if (type === 'shelf-stage') {
     // 舞台: 居中仰拍
@@ -7081,6 +7240,8 @@ var lyricCameraUp = new THREE.Vector3();
 var lyricCameraTarget = new THREE.Vector3();
 var lyricLayoutBase = new THREE.Vector3();
 var lyricLayoutTarget = new THREE.Vector3();
+var lyricCoverWorldPos = new THREE.Vector3();
+var lyricCoverWorldQuat = new THREE.Quaternion();
 var lyricBaseEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 var lyricTiltEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 var lyricBaseQuat = new THREE.Quaternion();
@@ -7088,14 +7249,14 @@ var lyricTiltQuat = new THREE.Quaternion();
 var lyricTargetQuat = new THREE.Quaternion();
 var LYRIC_CAMERA_LOCK_MAX_SCALE = 0.80;
 function setStageLyricViewBasisFromCameraOrQuaternion(fallbackQuat) {
-  if (camera) {
-    camera.getWorldDirection(lyricCameraDir);
-    lyricCameraRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
-    lyricCameraUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
-  } else if (fallbackQuat) {
+  if (fallbackQuat) {
     lyricCameraDir.set(0, 0, 1).applyQuaternion(fallbackQuat);
     lyricCameraRight.set(1, 0, 0).applyQuaternion(fallbackQuat);
     lyricCameraUp.set(0, 1, 0).applyQuaternion(fallbackQuat);
+  } else if (camera) {
+    camera.getWorldDirection(lyricCameraDir);
+    lyricCameraRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+    lyricCameraUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
   } else {
     lyricCameraDir.set(0, 0, 1);
     lyricCameraRight.set(1, 0, 0);
@@ -7341,6 +7502,16 @@ function clampRange(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function normalizeCoverResolution(v) {
   return clampRange(Number(v) || 1, 0.75, 1.55);
 }
+function normalizePerformanceBackgroundMode(v, liveKeepFallback) {
+  var value = String(v || '');
+  if (value === 'keep' || liveKeepFallback === true) return 'keep';
+  if (value === 'release') return 'release';
+  return 'auto';
+}
+function normalizePerformanceQuality(v) {
+  var value = String(v || '');
+  return /^(eco|balanced|high|ultra)$/.test(value) ? value : fxDefaults.performanceQuality;
+}
 function coverParticleGridForResolution(v) {
   var grid = Math.round(118 * normalizeCoverResolution(v));
   grid = Math.max(88, Math.min(183, grid));
@@ -7358,7 +7529,8 @@ function coverTextureSizeForResolution(v) {
 }
 function readSavedLyricLayout() {
   try {
-    var raw = JSON.parse(localStorage.getItem(LYRIC_LAYOUT_STORE_KEY) || '{}') || {};
+    var savedLayoutRaw = localStorage.getItem(LYRIC_LAYOUT_STORE_KEY);
+    var raw = savedLayoutRaw ? (JSON.parse(savedLayoutRaw) || {}) : packagedDefaultLyricLayoutRaw();
     var savedPreset = clampRange(Number(raw.preset) || 0, 0, 6);
     if (savedPreset === 3 && raw.visualPresetSchema !== VISUAL_PRESET_SCHEMA) {
       savedPreset = 5;
@@ -7371,6 +7543,11 @@ function readSavedLyricLayout() {
       ? savedBgMode === 'custom'
       : (raw.backgroundColorCustom === true || (raw.backgroundColorCustom !== false && savedBgColor !== '#000000') || savedBgOpacity < 1);
     var desktopLyricsSchemaReady = raw.desktopLyricsSchema === 'desktop-lyrics-v3';
+    var savedShelfCameraMode = normalizeShelfCameraMode(raw.shelfCameraMode || fxDefaults.shelfCameraMode);
+    var savedShelfAngleManual = raw.shelfAngleYManual === true;
+    var savedShelfAngle = savedShelfAngleManual
+      ? clampRange(raw.shelfAngleY == null ? shelfDefaultAngleForCameraMode(savedShelfCameraMode) : Number(raw.shelfAngleY), -30, 30)
+      : shelfDefaultAngleForCameraMode(savedShelfCameraMode);
     return {
       preset: savedPreset,
       intensity: clampRange(Number(raw.intensity) || fxDefaults.intensity, 0.2, 1.6),
@@ -7428,17 +7605,23 @@ function readSavedLyricLayout() {
       desktopLyricsCinema: desktopLyricsSchemaReady ? raw.desktopLyricsCinema !== false : fxDefaults.desktopLyricsCinema,
       desktopLyricsHighlight: desktopLyricsSchemaReady ? raw.desktopLyricsHighlight === true : fxDefaults.desktopLyricsHighlight,
       desktopLyricsFps: desktopLyricsSchemaReady ? normalizeDesktopLyricsFps(raw.desktopLyricsFps) : fxDefaults.desktopLyricsFps,
+      performanceBackground: normalizePerformanceBackgroundMode(raw.performanceBackground, raw.liveBackgroundKeep === true),
+      performanceQuality: normalizePerformanceQuality(raw.performanceQuality),
+      liveBackgroundKeep: normalizePerformanceBackgroundMode(raw.performanceBackground, raw.liveBackgroundKeep === true) === 'keep',
       wallpaperMode: false,
       wallpaperOpacity: clampRange(raw.wallpaperOpacity == null ? fxDefaults.wallpaperOpacity : Number(raw.wallpaperOpacity), 0.35, 1),
       coverResolution: normalizeCoverResolution(raw.coverResolution),
       shelf: /^(off|side|stage)$/.test(String(raw.shelf || '')) ? raw.shelf : fxDefaults.shelf,
-      shelfCameraMode: normalizeShelfCameraMode(raw.shelfCameraMode || fxDefaults.shelfCameraMode),
+      shelfCameraMode: savedShelfCameraMode,
       shelfPresence: normalizeShelfPresence(raw.shelfPresence || fxDefaults.shelfPresence),
+      shelfShowPodcasts: raw.shelfShowPodcasts !== false,
+      shelfMergeCollections: raw.shelfMergeCollections === true,
       shelfSize: clampRange(raw.shelfSize == null ? fxDefaults.shelfSize : Number(raw.shelfSize), 0.65, 1.45),
       shelfOffsetX: clampRange(raw.shelfOffsetX == null ? fxDefaults.shelfOffsetX : Number(raw.shelfOffsetX), -1.2, 1.2),
       shelfOffsetY: clampRange(raw.shelfOffsetY == null ? fxDefaults.shelfOffsetY : Number(raw.shelfOffsetY), -0.9, 0.9),
       shelfOffsetZ: clampRange(raw.shelfOffsetZ == null ? fxDefaults.shelfOffsetZ : Number(raw.shelfOffsetZ), -0.9, 0.9),
-      shelfAngleY: clampRange(raw.shelfAngleY == null ? fxDefaults.shelfAngleY : Number(raw.shelfAngleY), -30, 30),
+      shelfAngleY: savedShelfAngle,
+      shelfAngleYManual: savedShelfAngleManual,
       shelfOpacity: clampRange(raw.shelfOpacity == null ? fxDefaults.shelfOpacity : Number(raw.shelfOpacity), 0.25, 1),
       shelfBgOpacity: clampRange(raw.shelfBgOpacity == null ? fxDefaults.shelfBgOpacity : Number(raw.shelfBgOpacity), 0.25, 0.98),
       shelfAccentColor: normalizeHexColor(raw.shelfAccentColor || fxDefaults.shelfAccentColor, fxDefaults.shelfAccentColor),
@@ -7512,17 +7695,23 @@ function saveLyricLayout() {
       desktopLyricsCinema: fx.desktopLyricsCinema !== false,
       desktopLyricsHighlight: fx.desktopLyricsHighlight === true,
       desktopLyricsFps: normalizeDesktopLyricsFps(fx.desktopLyricsFps),
+      performanceBackground: normalizePerformanceBackgroundMode(fx.performanceBackground, fx.liveBackgroundKeep === true),
+      performanceQuality: normalizePerformanceQuality(fx.performanceQuality),
+      liveBackgroundKeep: normalizePerformanceBackgroundMode(fx.performanceBackground, fx.liveBackgroundKeep === true) === 'keep',
       wallpaperMode: false,
       wallpaperOpacity: clampRange(fx.wallpaperOpacity == null ? fxDefaults.wallpaperOpacity : Number(fx.wallpaperOpacity), 0.35, 1),
       coverResolution: normalizeCoverResolution(fx.coverResolution),
       shelf: /^(off|side|stage)$/.test(String(fx.shelf || '')) ? fx.shelf : fxDefaults.shelf,
       shelfCameraMode: normalizeShelfCameraMode(fx.shelfCameraMode || fxDefaults.shelfCameraMode),
       shelfPresence: normalizeShelfPresence(fx.shelfPresence || fxDefaults.shelfPresence),
+      shelfShowPodcasts: fx.shelfShowPodcasts !== false,
+      shelfMergeCollections: fx.shelfMergeCollections === true,
       shelfSize: clampRange(fx.shelfSize == null ? fxDefaults.shelfSize : Number(fx.shelfSize), 0.65, 1.45),
       shelfOffsetX: clampRange(fx.shelfOffsetX == null ? fxDefaults.shelfOffsetX : Number(fx.shelfOffsetX), -1.2, 1.2),
       shelfOffsetY: clampRange(fx.shelfOffsetY == null ? fxDefaults.shelfOffsetY : Number(fx.shelfOffsetY), -0.9, 0.9),
       shelfOffsetZ: clampRange(fx.shelfOffsetZ == null ? fxDefaults.shelfOffsetZ : Number(fx.shelfOffsetZ), -0.9, 0.9),
       shelfAngleY: clampRange(fx.shelfAngleY == null ? fxDefaults.shelfAngleY : Number(fx.shelfAngleY), -30, 30),
+      shelfAngleYManual: fx.shelfAngleYManual === true,
       shelfOpacity: clampRange(fx.shelfOpacity == null ? fxDefaults.shelfOpacity : Number(fx.shelfOpacity), 0.25, 1),
       shelfBgOpacity: clampRange(fx.shelfBgOpacity == null ? fxDefaults.shelfBgOpacity : Number(fx.shelfBgOpacity), 0.25, 0.98),
       shelfAccentColor: normalizeHexColor(fx.shelfAccentColor || fxDefaults.shelfAccentColor, fxDefaults.shelfAccentColor),
@@ -7549,6 +7738,19 @@ function normalizeDesktopLyricsFps(value) {
 function normalizeShelfCameraMode(value) {
   return String(value || '') === 'static' ? 'static' : 'dynamic';
 }
+function shelfDefaultAngleForCameraMode(mode) {
+  return normalizeShelfCameraMode(mode) === 'static' ? -15 : 0;
+}
+function applyShelfCameraDefaultAngle(force) {
+  if (!fx) return;
+  fx.shelfCameraMode = normalizeShelfCameraMode(fx.shelfCameraMode || fxDefaults.shelfCameraMode);
+  if (force || fx.shelfAngleYManual !== true) {
+    fx.shelfAngleYManual = false;
+    fx.shelfAngleY = shelfDefaultAngleForCameraMode(fx.shelfCameraMode);
+  } else {
+    fx.shelfAngleY = Math.round(clampRange(Number(fx.shelfAngleY) || 0, -30, 30));
+  }
+}
 function normalizeShelfPresence(value) {
   return String(value || '') === 'always' ? 'always' : 'auto';
 }
@@ -7558,12 +7760,15 @@ function normalizedShelfNumber(key, fallback, min, max) {
   return clampRange(value, min, max);
 }
 function shelfSettings() {
+  var angleDeg = fx && fx.shelfAngleYManual === true
+    ? normalizedShelfNumber('shelfAngleY', shelfDefaultAngleForCameraMode(fx.shelfCameraMode), -30, 30)
+    : shelfDefaultAngleForCameraMode(fx && fx.shelfCameraMode);
   return {
     size: normalizedShelfNumber('shelfSize', fxDefaults.shelfSize, 0.65, 1.45),
     x: normalizedShelfNumber('shelfOffsetX', fxDefaults.shelfOffsetX, -1.2, 1.2),
     y: normalizedShelfNumber('shelfOffsetY', fxDefaults.shelfOffsetY, -0.9, 0.9),
     z: normalizedShelfNumber('shelfOffsetZ', fxDefaults.shelfOffsetZ, -0.9, 0.9),
-    angle: normalizedShelfNumber('shelfAngleY', fxDefaults.shelfAngleY, -30, 30) * Math.PI / 180,
+    angle: angleDeg * Math.PI / 180,
     opacity: normalizedShelfNumber('shelfOpacity', fxDefaults.shelfOpacity, 0.25, 1),
     bgOpacity: normalizedShelfNumber('shelfBgOpacity', fxDefaults.shelfBgOpacity, 0.25, 0.98),
     accent: normalizeHexColor((fx && fx.shelfAccentColor) || fxDefaults.shelfAccentColor, fxDefaults.shelfAccentColor)
@@ -8781,8 +8986,6 @@ function updateStageLyrics3D(dt) {
   if (!isFinite(stageLyrics.glowFollowY)) stageLyrics.glowFollowY = 0;
   if (!isFinite(stageLyrics.glowFollowRoll)) stageLyrics.glowFollowRoll = 0;
   var t = uniforms.uTime.value;
-  var coverRotY = particles ? particles.rotation.y : 0;
-  var coverRotX = particles ? particles.rotation.x : 0;
   var lyricGlowStrength = fx.lyricGlow ? Math.min(0.85, Math.max(0, fx.lyricGlowStrength)) : 0;
   var glowDrive = Math.min(1.7, Math.max(0, lyricGlowStrength / 0.50));
   var glowBreath = lyricGlowStrength > 0 ? (0.5 + 0.5 * Math.sin(t * 1.05)) : 0;
@@ -8818,7 +9021,25 @@ function updateStageLyrics3D(dt) {
   var layoutTiltX = clampRange(Number(fx.lyricTiltX) || 0, -42, 42);
   var layoutTiltY = clampRange(Number(fx.lyricTiltY) || 0, -42, 42);
   var skullMouthLyrics = !!(camera && fx && fx.preset === SKULL_PRESET_INDEX && skullParticleGroup && skullParticleGroup.visible);
-  var skullShelfDetailOpen = !!(fx && fx.preset === SKULL_PRESET_INDEX && shelfManager && shelfManager.hasOpenContent && shelfManager.hasOpenContent());
+  var shelfDetailOpen = !!(shelfManager && shelfManager.hasOpenContent && shelfManager.hasOpenContent());
+  var skullShelfDetailOpen = !!(fx && fx.preset === SKULL_PRESET_INDEX && shelfDetailOpen);
+  var normalShelfDetailOpen = !!(shelfDetailOpen && !skullShelfDetailOpen);
+  stageLyrics.group.renderOrder = shelfDetailOpen ? 24 : 38;
+  var shelfDetailLyricProfile = shelfDetailOpen ? {
+    opacity: skullShelfDetailOpen ? 0.30 : 0.38,
+    readability: skullShelfDetailOpen ? 0.20 : 0.26,
+    bloom: skullShelfDetailOpen ? 0.20 : 0.24,
+    glowCap: skullShelfDetailOpen ? 0.050 : 0.070,
+    outgoing: skullShelfDetailOpen ? 0.34 : 0.42,
+    easeDown: 0.34
+  } : {
+    opacity: 0.96,
+    readability: 0.86,
+    bloom: 1,
+    glowCap: 1.0,
+    outgoing: 1,
+    easeDown: 0.16
+  };
   var shelfLyricAvoid = shouldAvoidStageLyricsForShelf();
   var wallpaperLyricLock = shouldUseWallpaperLyricCameraLock();
   var wallpaperShelfLyrics = wallpaperLyricLock && shouldDimWallpaperForShelf();
@@ -8833,9 +9054,9 @@ function updateStageLyrics3D(dt) {
     layoutY = clampRange(layoutY + 0.06, -1.2, 1.35);
     layoutZ = clampRange(layoutZ + 0.72, -1.6, 1.6);
   } else if (!skullMouthLyrics && shouldOffsetLyricsForShelfDetail()) {
-    layoutScale *= 0.70;
-    layoutX = clampRange(layoutX - 1.58, -2.0, 2.0);
-    layoutY = clampRange(layoutY + 0.08, -1.2, 1.35);
+    layoutScale *= normalShelfDetailOpen ? 0.56 : 0.70;
+    layoutX = clampRange(layoutX - (normalShelfDetailOpen ? 1.78 : 1.58), -2.0, 2.0);
+    layoutY = clampRange(layoutY + (normalShelfDetailOpen ? 0.18 : 0.08), -1.2, 1.35);
     layoutZ = clampRange(layoutZ + 0.84, -1.6, 1.6);
   }
   if (skullMouthLyrics) {
@@ -8878,7 +9099,7 @@ function updateStageLyrics3D(dt) {
     }
   } else if (cameraLockedLyrics) {
     if (stageLyrics.group.userData) stageLyrics.group.userData.skullMouthLocked = false;
-    setStageLyricViewBasisFromCameraOrQuaternion(camera.quaternion);
+    setStageLyricViewBasisFromCameraOrQuaternion(null);
     lyricLayoutBase.copy(camera.position).addScaledVector(lyricCameraDir, lockBaseDistance);
     lyricCameraTarget.copy(lyricLayoutBase);
     applyStageLyricLayoutOffset(lyricCameraTarget, layoutX, layoutY, layoutZ);
@@ -8896,17 +9117,21 @@ function updateStageLyrics3D(dt) {
   } else {
     if (stageLyrics.group.userData) stageLyrics.group.userData.skullMouthLocked = false;
     stageLyrics.snapCameraLockFrames = 0;
-    setStageLyricViewBasisFromCameraOrQuaternion(particles ? particles.quaternion : null);
-    lyricLayoutBase.set(Math.sin(coverRotY) * 0.10, Math.sin(t * 0.38) * 0.030, 0);
+    if (particles) {
+      particles.updateMatrixWorld(true);
+      particles.getWorldPosition(lyricCoverWorldPos);
+      particles.getWorldQuaternion(lyricCoverWorldQuat);
+    } else {
+      lyricCoverWorldPos.set(0, 0, 0);
+      lyricCoverWorldQuat.identity();
+    }
+    setStageLyricViewBasisFromCameraOrQuaternion(lyricCoverWorldQuat);
+    lyricLayoutBase.copy(lyricCoverWorldPos);
     lyricLayoutTarget.copy(lyricLayoutBase);
     applyStageLyricLayoutOffset(lyricLayoutTarget, layoutX, layoutY, layoutZ);
-    stageLyrics.group.position.x += (lyricLayoutTarget.x - stageLyrics.group.position.x) * 0.12;
-    stageLyrics.group.position.y += (lyricLayoutTarget.y - stageLyrics.group.position.y) * 0.12;
-    stageLyrics.group.position.z += (lyricLayoutTarget.z - stageLyrics.group.position.z) * 0.16;
-    lyricBaseEuler.set(coverRotX, coverRotY, 0, 'YXZ');
-    lyricBaseQuat.setFromEuler(lyricBaseEuler);
-    stageLyricTargetQuaternion(lyricBaseQuat, layoutTiltX, layoutTiltY);
-    stageLyrics.group.quaternion.slerp(lyricTargetQuat, 0.16);
+    stageLyrics.group.position.copy(lyricLayoutTarget);
+    stageLyricTargetQuaternion(lyricCoverWorldQuat, layoutTiltX, layoutTiltY);
+    stageLyrics.group.quaternion.copy(lyricTargetQuat);
   }
   function tickMesh(mesh, isCurrent) {
     if (!mesh) return false;
@@ -8932,36 +9157,43 @@ function updateStageLyrics3D(dt) {
     }
     var opacity = 0;
     if (isCurrent) {
-      var lyricOpacityTarget = skullShelfDetailOpen ? 0.08 : 0.96;
-      opacity = Math.min(1, (data.textMat ? data.textMat.uniforms.uOpacity.value : 0) + (lyricOpacityTarget - (data.textMat ? data.textMat.uniforms.uOpacity.value : 0)) * 0.16);
+      var shelfDetailLyricDim = shelfDetailLyricProfile.bloom;
+      var lyricOpacityTarget = shelfDetailLyricProfile.opacity;
+      var currentOpacity = data.textMat ? data.textMat.uniforms.uOpacity.value : 0;
+      var opacityEase = shelfDetailOpen && currentOpacity > lyricOpacityTarget ? shelfDetailLyricProfile.easeDown : 0.16;
+      opacity = clampRange(currentOpacity + (lyricOpacityTarget - currentOpacity) * opacityEase, 0, 1);
       if (data.textMat) data.textMat.uniforms.uOpacity.value = opacity;
-      var skullDetailLyricDim = skullShelfDetailOpen ? 0.10 : 1;
       if (data.readabilityMat) {
-        var readabilityTarget = opacity * (skullShelfDetailOpen ? 0.18 : 0.86);
-        data.readabilityMat.opacity += (readabilityTarget - data.readabilityMat.opacity) * 0.16;
+        var readabilityTarget = opacity * shelfDetailLyricProfile.readability;
+        var readabilityEase = shelfDetailOpen && data.readabilityMat.opacity > readabilityTarget ? 0.28 : 0.16;
+        data.readabilityMat.opacity += (readabilityTarget - data.readabilityMat.opacity) * readabilityEase;
       }
-      if (data.textMat && data.textMat.uniforms.uSolar) data.textMat.uniforms.uSolar.value += (stageLyrics.highBloom * skullDetailLyricDim - data.textMat.uniforms.uSolar.value) * 0.12;
-      var solar = stageLyrics.highBloom * skullDetailLyricDim;
+      if (data.textMat && data.textMat.uniforms.uSolar) {
+        var solarTarget = stageLyrics.highBloom * shelfDetailLyricDim;
+        var solarEase = shelfDetailOpen && data.textMat.uniforms.uSolar.value > solarTarget ? 0.26 : 0.12;
+        data.textMat.uniforms.uSolar.value += (solarTarget - data.textMat.uniforms.uSolar.value) * solarEase;
+      }
+      var solar = stageLyrics.highBloom * shelfDetailLyricDim;
       var warmth = Math.max(0, Math.min(1, solar * 1.10));
       if (data.glowMat) {
-        var glowTarget = lyricGlowStrength > 0 ? Math.min(1.0, (0.075 + solar * 0.34 + stageLyrics.beatGlow * 0.16) * Math.min(3.0, glowDrive)) : 0;
-        data.glowMat.opacity += (glowTarget - data.glowMat.opacity) * (glowTarget > data.glowMat.opacity ? 0.095 : 0.055);
+        var glowTarget = lyricGlowStrength > 0 ? Math.min(shelfDetailLyricProfile.glowCap, (0.075 + solar * 0.34 + stageLyrics.beatGlow * 0.16 * shelfDetailLyricDim) * Math.min(3.0, glowDrive)) : 0;
+        data.glowMat.opacity += (glowTarget - data.glowMat.opacity) * (glowTarget > data.glowMat.opacity ? 0.095 : (shelfDetailOpen ? 0.20 : 0.055));
         data.glowMat.color.copy(lyricThreeColor(stageLyrics.palette.glowColor || stageLyrics.palette.secondary, '#9cffdf', 0.36)).lerp(lyricSunHotColor, warmth);
       }
       if (data.sparkMat) {
-        var sparkTarget = lyricGlowStrength > 0 && fx.lyricGlowParticles ? Math.min(0.42, (0.10 + solar * 0.14 + stageLyrics.beatGlow * 0.10) * Math.min(1.6, glowDrive)) : 0;
+        var sparkTarget = lyricGlowStrength > 0 && fx.lyricGlowParticles && !shelfDetailOpen ? Math.min(0.42, (0.10 + solar * 0.14 + stageLyrics.beatGlow * 0.10) * Math.min(1.6, glowDrive)) : 0;
         var sparkOpacity = getLyricSparkOpacity(data);
-        sparkOpacity += (sparkTarget - sparkOpacity) * (sparkTarget > sparkOpacity ? 0.13 : 0.075);
+        sparkOpacity += (sparkTarget - sparkOpacity) * (sparkTarget > sparkOpacity ? 0.13 : (shelfDetailOpen ? 0.22 : 0.075));
         setLyricSparkOpacity(data, sparkOpacity);
-        var sparkSizeTarget = fx.lyricGlowParticles ? (0.050 + solar * 0.016 + stageLyrics.beatGlow * 0.026 + bass * 0.008) : 0.035;
+        var sparkSizeTarget = fx.lyricGlowParticles && !shelfDetailOpen ? (0.050 + solar * 0.016 + stageLyrics.beatGlow * 0.026 + bass * 0.008) : 0.035;
         setLyricSparkSize(data, getLyricSparkSize(data) + (sparkSizeTarget - getLyricSparkSize(data)) * 0.12);
         var sparkColor = lyricSunHotColor.clone().lerp(lyricSunColor, 0.22 + solar * 0.18);
         setLyricSparkColor(data, sparkColor);
       }
       var seed = mesh.userData.floatSeed || 0;
       if (data.sunMat) {
-        var sunTarget = lyricGlowStrength > 0 ? Math.min(0.88, (Math.pow(Math.min(1.35, solar), 1.08) * 0.28 + stageLyrics.beatGlow * 0.20) * Math.min(2.4, glowDrive)) : 0;
-        data.sunMat.opacity += (sunTarget - data.sunMat.opacity) * 0.055;
+        var sunTarget = lyricGlowStrength > 0 && !shelfDetailOpen ? Math.min(0.88, (Math.pow(Math.min(1.35, solar), 1.08) * 0.28 + stageLyrics.beatGlow * 0.20) * Math.min(2.4, glowDrive)) : 0;
+        data.sunMat.opacity += (sunTarget - data.sunMat.opacity) * (shelfDetailOpen ? 0.18 : 0.055);
         data.sunMat.color.copy(lyricSunColor).lerp(lyricSunHotColor, solar * 0.55);
       }
       if (data.sun) {
@@ -9011,17 +9243,17 @@ function updateStageLyrics3D(dt) {
       }
       return true;
     }
-    opacity = (1 - a) * 0.72;
+    opacity = (1 - a) * 0.72 * shelfDetailLyricProfile.outgoing;
     if (data.textMat) data.textMat.uniforms.uOpacity.value = opacity;
-    if (data.readabilityMat) data.readabilityMat.opacity = opacity * 0.58;
-    if (data.textMat && data.textMat.uniforms.uSolar) data.textMat.uniforms.uSolar.value *= 0.86;
-    if (data.glowMat) data.glowMat.opacity = lyricGlowStrength > 0 ? opacity * 0.08 * lyricGlowStrength : 0;
+    if (data.readabilityMat) data.readabilityMat.opacity = opacity * (shelfDetailOpen ? shelfDetailLyricProfile.readability : 0.58);
+    if (data.textMat && data.textMat.uniforms.uSolar) data.textMat.uniforms.uSolar.value *= shelfDetailOpen ? 0.72 : 0.86;
+    if (data.glowMat) data.glowMat.opacity = lyricGlowStrength > 0 ? (shelfDetailOpen ? Math.min(shelfDetailLyricProfile.glowCap * 0.40, opacity * 0.05 * lyricGlowStrength) : opacity * 0.08 * lyricGlowStrength) : 0;
     if (data.sparkMat) {
-      var outgoingSpark = lyricGlowStrength > 0 && fx.lyricGlowParticles ? Math.max(opacity * 0.24 * lyricGlowStrength, (1 - a) * 0.18 * lyricGlowStrength) : 0;
+      var outgoingSpark = lyricGlowStrength > 0 && fx.lyricGlowParticles && !shelfDetailOpen ? Math.max(opacity * 0.24 * lyricGlowStrength, (1 - a) * 0.18 * lyricGlowStrength) : 0;
       setLyricSparkOpacity(data, outgoingSpark);
       setLyricSparkSize(data, 0.046 + (1 - a) * 0.020);
     }
-    if (data.sunMat) data.sunMat.opacity = lyricGlowStrength > 0 ? opacity * 0.08 * lyricGlowStrength : 0;
+    if (data.sunMat) data.sunMat.opacity = lyricGlowStrength > 0 && !shelfDetailOpen ? opacity * 0.08 * lyricGlowStrength : 0;
     mesh.position.z -= dt * 0.26;
     mesh.position.y += dt * 0.08;
     mesh.scale.setScalar(0.98 - a * 0.06);
@@ -9412,7 +9644,7 @@ function mergeAIDepthIntoEdgeTexture(heuristicCanvas, aiCanvas) {
 function queueAIDepthForCover(srcCanvas, edgeCanvas, token, opts, cacheSeed, force) {
   opts = opts || {};
   if (!fx.aiDepth || !srcCanvas || !edgeCanvas) return;
-  if (!force && document.hidden) return;
+  if (!force && isHiddenForBackgroundOptimization()) return;
   if (performance.now() < aiDepthFailUntil || aiDepthBusy) return;
   var now = performance.now();
   if (!force && now - aiDepthLastRunAt < aiDepthMinGapMs) return;
@@ -9507,7 +9739,7 @@ function visualEase(t) {
 function tweenLoading(to, durationMs, onComplete) {
   if (loadingTween) cancelAnimationFrame(loadingTween.raf);
   durationMs = Math.max(1, durationMs || 1);
-  if (document.hidden || isDeepBackgroundMode()) {
+  if (isHiddenForBackgroundOptimization() || isDeepBackgroundMode()) {
     uniforms.uLoading.value = to;
     loadingTween = null;
     if (onComplete) onComplete();
@@ -9539,7 +9771,7 @@ function showLoading() {
 }
 function hideLoading() {
   if (loadingHideTimer) clearTimeout(loadingHideTimer);
-  if (document.hidden || isDeepBackgroundMode()) {
+  if (isHiddenForBackgroundOptimization() || isDeepBackgroundMode()) {
     forceLoadingSettled('background-hide');
     return;
   }
@@ -9548,7 +9780,7 @@ function hideLoading() {
   loadingHideTimer = setTimeout(function(){
     loadingHideTimer = null;
     var current = uniforms.uLoading.value || 0;
-    if (current <= 0.015 || document.hidden || isDeepBackgroundMode()) {
+    if (current <= 0.015 || isHiddenForBackgroundOptimization() || isDeepBackgroundMode()) {
       if (loadingTween) {
         cancelAnimationFrame(loadingTween.raf);
         loadingTween = null;
@@ -9851,7 +10083,7 @@ async function analyzeMusicTempoInWorker(buffer, token) {
   if (typeof Worker === 'undefined' || typeof Blob === 'undefined' || typeof URL === 'undefined') return null;
   try {
     showBeatChip('后台锁定电影主拍…');
-    await yieldToIdle(document.hidden ? 20 : 180);
+    await yieldToIdle(isHiddenForBackgroundOptimization() ? 20 : 180);
     if (token !== beatMapToken) return null;
     var channels = buffer.numberOfChannels;
     var len = buffer.length;
@@ -9868,7 +10100,7 @@ async function analyzeMusicTempoInWorker(buffer, token) {
         mono[mi] = sum;
       }
       if ((monoStart / monoChunk) % 2 === 1) {
-        await yieldToIdle(document.hidden ? 10 : 60);
+        await yieldToIdle(isHiddenForBackgroundOptimization() ? 10 : 60);
         if (token !== beatMapToken) return null;
       }
     }
@@ -10128,11 +10360,11 @@ async function runQueueBeatPrefetch(fromIdx, token, seq, state) {
     var audioUrl = await fetchBeatPrefetchAudioUrl(song);
     if (token !== beatMapToken || seq !== beatPrefetchToken || !audioUrl || beatMapCache[key]) return;
     while (typeof isRenderInteractionActive === 'function' && isRenderInteractionActive() && token === beatMapToken && seq === beatPrefetchToken) {
-      await yieldToIdle(document.hidden ? 30 : 320);
+      await yieldToIdle(isHiddenForBackgroundOptimization() ? 30 : 320);
     }
     if (token !== beatMapToken || seq !== beatPrefetchToken || beatMapCache[key]) return;
     while (beatMapBusy && token === beatMapToken && seq === beatPrefetchToken) {
-      await yieldToIdle(document.hidden ? 30 : 240);
+      await yieldToIdle(isHiddenForBackgroundOptimization() ? 30 : 240);
     }
     if (token !== beatMapToken || seq !== beatPrefetchToken || beatMapCache[key]) return;
     var map = await analyzeAudioBeats(audioUrl, null, token, {
@@ -12538,7 +12770,7 @@ function shelfLayoutProfile() {
   var portrait = isPortraitShelfViewport();
   var narrow = !portrait && innerWidth < 980;
   var skullShelf = shouldUseSkullSafeShelfCamera();
-  var detailScale = portrait ? clampRange(innerWidth / 820, 0.64, 0.82) : (narrow ? 0.88 : 1);
+  var detailScale = portrait ? clampRange(innerWidth / 820, 0.70, 0.86) : (narrow ? 0.92 : 1.04);
   var shelfCtl = shelfSettings();
   return {
     portrait: portrait,
@@ -12560,14 +12792,14 @@ function shelfLayoutProfile() {
     stageZ: (portrait ? 0.84 : 1.0) + shelfCtl.z,
     stageScale: (portrait ? 0.72 : (narrow ? 0.86 : 1)) * shelfCtl.size,
     detail: {
-      x: (skullShelf ? (portrait ? 0.16 : (narrow ? 0.40 : 0.64)) : (portrait ? 0.86 : (narrow ? 1.92 : 2.72))) + shelfCtl.x * 0.62,
-      y: (skullShelf ? (portrait ? -0.40 : -0.68) : (portrait ? -0.42 : -0.48)) + shelfCtl.y * 0.55,
-      z: (skullShelf ? (portrait ? 1.10 : 1.22) : (portrait ? 1.44 : 1.50)) + shelfCtl.z * 0.45,
-      rx: skullShelf ? (portrait ? 0.006 : 0.014) : (portrait ? -0.01 : -0.02),
-      ry: (skullShelf ? (portrait ? -0.070 : -0.165) : (portrait ? 0.02 : 0.08)) + shelfCtl.angle * 0.55,
+      x: (skullShelf ? (portrait ? 0.16 : (narrow ? 0.40 : 0.64)) : (portrait ? 0.38 : (narrow ? 0.96 : 1.28))) + shelfCtl.x * 0.62,
+      y: (skullShelf ? (portrait ? -0.40 : -0.68) : (portrait ? 0.10 : 0.18)) + shelfCtl.y * 0.55,
+      z: (skullShelf ? (portrait ? 1.10 : 1.22) : (portrait ? 1.28 : 1.36)) + shelfCtl.z * 0.45,
+      rx: skullShelf ? (portrait ? 0.006 : 0.014) : (portrait ? -0.004 : -0.008),
+      ry: (skullShelf ? (portrait ? -0.070 : -0.165) : (portrait ? 0.00 : 0.020)) + shelfCtl.angle * 0.55,
       scale: (skullShelf ? detailScale * (portrait ? 0.88 : 1.02) : detailScale) * shelfCtl.size,
-      rowStep: skullShelf ? (portrait ? 0.37 : 0.43) : (portrait ? 0.35 : 0.43),
-      rowScale: skullShelf ? (portrait ? 0.90 : 1.02) : (portrait ? 0.84 : 1)
+      rowStep: skullShelf ? (portrait ? 0.37 : 0.43) : (portrait ? 0.36 : 0.42),
+      rowScale: skullShelf ? (portrait ? 0.90 : 1.02) : (portrait ? 0.88 : (narrow ? 0.96 : 1.00))
     }
   };
 }
@@ -12578,6 +12810,11 @@ function shelfHotZoneWidth() {
 function shelfPreviewUseZoneWidth() {
   return Math.min(820, Math.max(shelfHotZoneWidth(), innerWidth * 0.56));
 }
+function shelfWheelZoneWidth() {
+  var portrait = isPortraitShelfViewport();
+  var ratioWidth = innerWidth * (portrait ? 0.24 : 0.18);
+  return Math.min(portrait ? 280 : 360, Math.max(shelfHotZoneWidth(), ratioWidth));
+}
 function isShelfClickZone(e) {
   var edge = shelfPinnedOpen ? Math.min(390, Math.max(210, innerWidth * 0.22)) : shelfHotZoneWidth();
   return e.clientX > innerWidth - edge && e.clientY > 130 && e.clientY < innerHeight - 150;
@@ -12586,8 +12823,20 @@ function isShelfPreviewUseZone(e) {
   var edge = shelfPreviewUseZoneWidth();
   return e.clientX > innerWidth - edge && e.clientY > 96 && e.clientY < innerHeight - 96;
 }
+function isShelfWheelZone(e) {
+  var edge = shelfWheelZoneWidth();
+  return e.clientX > innerWidth - edge && e.clientY > 116 && e.clientY < innerHeight - 116;
+}
+function canUseSideShelfWithoutPinnedOpen() {
+  return !!shelfAlwaysVisible();
+}
 function shelfPreviewIsVisible() {
   return shelfHoverCue.guide || shelfHoverCue.zoneActive || shelfHoverCue.target > 0 || shelfHoverCue.value > 0.10 || shelfVisibility > 0.12;
+}
+function shelfAutoHiddenInputReady() {
+  if (shelfPinnedOpen || shelfAlwaysVisible()) return true;
+  if (shelfManager && shelfManager.hasOpenContent && shelfManager.hasOpenContent()) return true;
+  return !!(shelfHoverCue.guide || shelfHoverCue.zoneActive || shelfHoverCue.value > 0.18 || shelfVisibility > 0.16);
 }
 function canShowShelfHoverCueAt(e) {
   if (!e) return false;
@@ -12692,6 +12941,7 @@ function clearShelfPreviewOnPointerExit() {
   shelfHoverCue.zoneActive = false;
   shelfHoverCue.enteredAt = 0;
   if (typeof setShelfHoverTabVisible === 'function') setShelfHoverTabVisible(false);
+  if (shelfManager && shelfManager.clearSelected) shelfManager.clearSelected();
   if (hasContent && shelfManager.closeContent) safeShelfCloseContent('shelf-mode-reset');
   if (shelfPinnedOpen) setShelfPinnedOpen(false, true);
   shelfVisibility = 0;
@@ -12708,6 +12958,7 @@ function suppressShelfPreviewForPlaybackSwitch() {
   shelfHoverCue.guide = false;
   shelfVisibility = 0;
   if (typeof setShelfHoverTabVisible === 'function') setShelfHoverTabVisible(false);
+  if (shelfManager && shelfManager.clearSelected) shelfManager.clearSelected();
   if (typeof setFocusZone === 'function') setFocusZone(null, true);
 }
 function makeShelfManager() {
@@ -12728,6 +12979,7 @@ function makeShelfManager() {
   var lastCardRedrawAt = -10;
   var lastCardPulseBucket = -1;
   var cardBuildQueue = null;
+  var selectedIdx = -1;
 
   // v7.2 PSP 风格状态
   var centerIdx = 0;          // 当前居中卡片 index (在 items 数组中的位置)
@@ -12747,8 +12999,17 @@ function makeShelfManager() {
     return { mine: mine, fav: fav };
   }
 
+  function shelfShowsPodcasts() {
+    return !fx || fx.shelfShowPodcasts !== false;
+  }
+
+  function shelfMergesCollections() {
+    return !!(fx && fx.shelfMergeCollections === true);
+  }
+
   function activePlaylists() {
     var panes = splitPlaylists();
+    if (shelfMergesCollections()) return panes.mine.concat(panes.fav);
     var source = (shelfPane === 'fav') ? panes.fav : panes.mine;
     if (!source.length && shelfPane === 'mine' && panes.fav.length) source = panes.fav;
     if (!source.length && shelfPane === 'fav' && panes.mine.length) source = panes.mine;
@@ -12764,7 +13025,7 @@ function makeShelfManager() {
         return { type:'playlist', title: pl.name, sub:sourceLabel + ' · ' + (pl.trackCount||0)+' 首 · 播放 '+compactCount(pl.playCount||0),
           cover: pl.cover || '', tag: pl.subscribed ? '收藏歌单' : '我的歌单', playlistId: (provider === 'qq' ? 'qq:' : '') + pl.id, provider: provider };
       });
-      if (shelfPane === 'mine' && myPodcastCollections.length) {
+      if (shelfShowsPodcasts() && (shelfPane === 'mine' || shelfMergesCollections()) && myPodcastCollections.length) {
         myPodcastCollections.forEach(function(pc){
           items.push({ type:'podcastCollection', title: pc.title, sub:(pc.count || 0) + ' items', cover: pc.cover || '', tag:'我的播客', podcastKey: pc.key, itemType: pc.itemType });
         });
@@ -12839,6 +13100,17 @@ function makeShelfManager() {
       ctx.lineWidth = 1.1;
     }
     ctx.stroke();
+
+    if (card.selected) {
+      ctx.save();
+      makeRoundRect(ctx, pad + 2, pad + 2, W - pad*2 - 4, H - pad*2 - 4, 30);
+      ctx.shadowColor = shelfAccentRgba(0.58);
+      ctx.shadowBlur = 18;
+      ctx.strokeStyle = shelfAccentRgba(0.72);
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // 大封面方块
     var coverSize = H - pad*2 - 8;
@@ -12933,7 +13205,7 @@ function makeShelfManager() {
         ? { kind:'loadPlaylist', playlistId: 'podcast:' + item.podcastKey, title: item.title }
         : (item.type === 'queue' ? { kind:'playQueue', index: item.queueIndex } : { kind:'empty' }));
     group.add(mesh);
-    var card = { canvas: cv, ctx: ctx, texture: tx, mesh: mesh, item: item, index: i, isCenter: false, selected: false, fxPulse: 0, dofBlur: 0, dofBucket: -1, drawKey: '' };
+    var card = { canvas: cv, ctx: ctx, texture: tx, mesh: mesh, item: item, index: i, isCenter: false, selected: i === selectedIdx, floatMix: 0, fxPulse: 0, dofBlur: 0, dofBucket: -1, drawKey: '' };
     return card;
   }
 
@@ -13048,6 +13320,7 @@ function makeShelfManager() {
       centerTarget = Math.max(0, allItems.length - 1);
       centerSmooth = centerTarget;
     }
+    if (selectedIdx >= allItems.length) selectedIdx = -1;
     syncRenderedWindow(true, !!asyncCards);
     if (mode === 'stage') {
       createStageExtras();
@@ -13084,12 +13357,25 @@ function makeShelfManager() {
       var detailOpenSide = contentList && contentList.isOpen();
       var nowT = uniforms.uTime.value;
       var hoverBreath = (!shelfPinnedOpen && !detailOpenSide) ? shelfVisibility : 0;
+      var passiveAlways = shelfAlwaysVisible() && !shelfPinnedOpen && !detailOpenSide;
+      var liftTarget = card.selected && !detailOpenSide ? 1 : 0;
+      var liftRate = liftTarget > (card.floatMix || 0) ? 0.20 : 0.13;
+      card.floatMix = (card.floatMix || 0) + (liftTarget - (card.floatMix || 0)) * liftRate;
+      if (!liftTarget && card.floatMix < 0.004) card.floatMix = 0;
+      var lift = card.floatMix || 0;
+      var sideLayer = Math.max(0, SHELF_VISIBLE_RADIUS + 1 - Math.min(absD, SHELF_VISIBLE_RADIUS + 1));
+      card.mesh.renderOrder = passiveAlways
+        ? (30 + Math.round(sideLayer * 1.1) + Math.round(lift * 96))
+        : (60 + Math.round(sideLayer * 10) + Math.round(lift * 70));
       var breathPulse = hoverBreath * (0.5 + 0.5 * Math.sin(nowT * 1.22 + card.index * 0.74));
       var revealRaw = Math.max(0, Math.min(1, (nowT - shelfOpenAnimAt - absD * 0.035) / 0.62));
       var reveal = revealRaw * revealRaw * (3 - 2 * revealRaw);
       var entry = (1 - reveal) * (0.82 + absD * 0.075);
       var paneRaw = Math.max(0, Math.min(1, (nowT - paneSwitchAt - absD * 0.030) / 0.72));
       var paneEase = 1 - paneRaw * paneRaw * (3 - 2 * paneRaw);
+      var wallpaperShelfPose = shouldUseWallpaperSafeShelfCamera();
+      var skullShelfPose = shouldUseSkullSafeShelfCamera();
+      var safeShelfPose = wallpaperShelfPose || skullShelfPose;
       var px = layout.sideX + absD * layout.sideXStep - (detailOpenSide ? layout.sideDetailShift : 0) + entry * layout.sideEntryX;
       var py = (layout.sideY || 0) - delta * layout.sideYStep + (1 - reveal) * (delta < 0 ? -0.18 : 0.18);
       var pz = layout.sideZ - absD * layout.sideZStep - (1 - reveal) * 0.20;
@@ -13101,10 +13387,12 @@ function makeShelfManager() {
       pz += (parY * 0.026 - parX * 0.028) * parWeight;
       py += Math.sin(nowT * 0.92 + card.index * 0.64) * 0.052 * hoverBreath * Math.max(0.20, parWeight);
       pz += Math.cos(nowT * 0.78 + card.index * 0.52) * 0.030 * hoverBreath * parWeight;
-      var scale = (absD < 0.5 ? 1.12 : Math.max(0.55, 1.04 - absD * 0.14)) * (0.88 + reveal * 0.12) * (1 + pulse * 0.056 + breathPulse * 0.026) * layout.sideScale;
-      var wallpaperShelfPose = shouldUseWallpaperSafeShelfCamera();
-      var skullShelfPose = shouldUseSkullSafeShelfCamera();
-      var safeShelfPose = wallpaperShelfPose || skullShelfPose;
+      if (lift > 0.001) {
+        px -= lift * (skullShelfPose ? 0.035 : (layout.portrait ? 0.065 : 0.145));
+        py += lift * (skullShelfPose ? 0.045 : (layout.portrait ? 0.075 : 0.105));
+        pz += lift * (skullShelfPose ? 0.080 : 0.220);
+      }
+      var scale = (absD < 0.5 ? 1.12 : Math.max(0.55, 1.04 - absD * 0.14)) * (0.88 + reveal * 0.12) * (1 + pulse * 0.056 + breathPulse * 0.026 + lift * (skullShelfPose ? 0.045 : 0.075)) * layout.sideScale;
       if (wallpaperShelfPose) scale *= 1.22;
       else if (skullShelfPose) scale *= 1.04;
       card.mesh.position.set(px, py, pz);
@@ -13126,7 +13414,8 @@ function makeShelfManager() {
         opacity *= card.index === openCardIdx ? 0.16 : 0.08;
         card.mesh.material.color.setScalar(card.index === openCardIdx ? 0.42 : 0.25);
       } else {
-        card.mesh.material.color.setScalar(1);
+        if (passiveAlways) opacity *= 0.92 + lift * 0.08;
+        card.mesh.material.color.setScalar(passiveAlways ? (0.96 + lift * 0.04) : 1);
       }
       // v8: 自动隐藏 — shelf 不在 focus 区时整体淡化
       card.mesh.material.opacity = Math.min(1, opacity * (shelfVisibility != null ? shelfVisibility : 1) * reveal * (1 - paneEase * 0.24) + pulse * 0.10 * reveal + breathPulse * 0.035) * shelfLook.opacity;
@@ -13247,12 +13536,21 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
   }
 
   function sig(items) {
-    if (hasAnyPlatformLogin() && userPlaylists.length) {
+    if (hasAnyPlatformLogin() && (userPlaylists.length || myPodcastCollections.length)) {
       var source = activePlaylists();
-      var samplePlaylists = source.slice(0, 3).concat(source.slice(Math.max(3, source.length - 3)));
-      return [shelfPane, source.length, samplePlaylists.map(function(pl){
-        return [pl.id || '', pl.name || '', pl.trackCount || 0, pl.playCount || 0, pl.subscribed ? 1 : 0].join('|');
-      }).join('||')].join('::');
+      items = items || currentItems();
+      var sampleItems = items.slice(0, 3).concat(items.slice(Math.max(3, items.length - 3)));
+      return [
+        'platform',
+        shelfPane,
+        shelfMergesCollections() ? 1 : 0,
+        shelfShowsPodcasts() ? 1 : 0,
+        source.length,
+        myPodcastCollections.length,
+        sampleItems.map(function(it){
+          return [it.type || '', it.playlistId || '', it.podcastKey || '', it.title || '', it.sub || '', it.tag || ''].join('|');
+        }).join('||')
+      ].join('::');
     }
     items = items || playQueue.map(function(song, idx){
       return { type:'queue', title: song.name, queueIndex: idx };
@@ -13262,6 +13560,7 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
   }
 
   function switchPane(nextPane) {
+    if (shelfMergesCollections()) return false;
     if (nextPane === shelfPane) return false;
     paneMemory[shelfPane] = Math.max(0, Math.round(centerTarget));
     shelfPane = nextPane;
@@ -13275,9 +13574,23 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
     paneSwitchDir = nextPane === 'fav' ? 1 : -1;
     shelfOpenAnimAt = uniforms.uTime.value;
     if (contentList) contentList.close();
+    selectedIdx = Math.round(centerTarget);
+    playShelfSelectTick(paneSwitchDir, 'card');
     rebuild();
     showToast(nextPane === 'fav' ? '收藏歌单' : '我的歌单');
     return true;
+  }
+
+  function applySelectedIndex(idx) {
+    idx = idx == null || idx < 0 ? -1 : Math.round(idx);
+    selectedIdx = idx;
+    cards.forEach(function(c) {
+      var next = c.index === selectedIdx;
+      if (c.selected !== next) {
+        c.selected = next;
+        drawCard(c, c.item);
+      }
+    });
   }
 
   function step(direction) {
@@ -13285,25 +13598,31 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
     var panes = splitPlaylists();
     var atEnd = centerTarget >= allItems.length - 1 && direction > 0;
     var atStart = centerTarget <= 0 && direction < 0;
-    if (hasAnyPlatformLogin() && userPlaylists.length && shelfPane === 'mine' && atEnd && panes.fav.length) {
-      collectionReveal += Math.min(1.5, Math.abs(direction));
-      if (collectionReveal >= 3) switchPane('fav');
-      return;
-    }
-    if (hasAnyPlatformLogin() && userPlaylists.length && shelfPane === 'fav' && atStart && panes.mine.length) {
-      collectionReveal += Math.min(1.5, Math.abs(direction));
-      if (collectionReveal >= 3) switchPane('mine');
-      return;
+    if (!shelfMergesCollections()) {
+      if (hasAnyPlatformLogin() && userPlaylists.length && shelfPane === 'mine' && atEnd && panes.fav.length) {
+        collectionReveal += Math.min(1.5, Math.abs(direction));
+        if (collectionReveal >= 3) switchPane('fav');
+        return;
+      }
+      if (hasAnyPlatformLogin() && userPlaylists.length && shelfPane === 'fav' && atStart && panes.mine.length) {
+        collectionReveal += Math.min(1.5, Math.abs(direction));
+        if (collectionReveal >= 3) switchPane('mine');
+        return;
+      }
     }
     collectionReveal = 0;
+    var prevTarget = Math.round(centerTarget);
     centerTarget = Math.max(0, Math.min(allItems.length - 1, centerTarget + direction));
+    var nextTarget = Math.round(centerTarget);
     paneMemory[shelfPane] = Math.max(0, Math.round(centerTarget));
     syncRenderedWindow(false);
-    pulseCard(cards.find(function(c){ return c.index === Math.round(centerTarget); }), 0.55);
+    applySelectedIndex(nextTarget);
+    if (nextTarget !== prevTarget) playShelfSelectTick(direction, 'card');
+    pulseCard(cards.find(function(c){ return c.index === nextTarget; }), 0.55);
   }
 
   function screenHitCard(card, sx, sy, pad) {
-    if (!card || !card.mesh || !card.mesh.visible || !group || !group.visible) return false;
+    if (!card || !card.mesh || !card.mesh.visible || !group || !group.visible) return null;
     var params = card.mesh.geometry && card.mesh.geometry.parameters || {};
     var hw = (params.width || 1.7) / 2;
     var hh = (params.height || 0.85) / 2;
@@ -13323,14 +13642,18 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
       minY = Math.min(minY, y); maxY = Math.max(maxY, y);
     }
     pad = pad == null ? 28 : pad;
-    return sx >= minX - pad && sx <= maxX + pad && sy >= minY - pad && sy <= maxY + pad;
+    if (sx < minX - pad || sx > maxX + pad || sy < minY - pad || sy > maxY + pad) return null;
+    var u = clampRange((sx - minX) / Math.max(1, maxX - minX), 0, 1);
+    var v = 1 - clampRange((sy - minY) / Math.max(1, maxY - minY), 0, 1);
+    return { x: u, y: v };
   }
 
-  function pickCardAtScreen(sx, sy) {
+  function pickCardAtScreen(sx, sy, pad) {
     if (!cards.length || !group || !group.visible) return null;
     var ordered = cards.slice().sort(function(a, b){ return (b.mesh.renderOrder || 0) - (a.mesh.renderOrder || 0); });
     for (var i = 0; i < ordered.length; i++) {
-      if (screenHitCard(ordered[i], sx, sy, 72)) return { card: ordered[i], uv: null, screenPick: true };
+      var uv = screenHitCard(ordered[i], sx, sy, pad == null ? 72 : pad);
+      if (uv) return { card: ordered[i], uv: uv, screenPick: true };
     }
     return null;
   }
@@ -13381,6 +13704,9 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
       if (connectorParticles) connectorParticles.visible = group.visible && mode === 'stage';
       if (floorMirror) floorMirror.visible = group.visible && mode === 'stage';
       if (mode === 'side') {
+        var passiveAlwaysGroup = shelfAlwaysVisible() && !shelfPinnedOpen && !(contentList && contentList.isOpen());
+        var liftedCardActive = passiveAlwaysGroup && cards.some(function(c){ return c.selected || (c.floatMix || 0) > 0.025; });
+        group.renderOrder = passiveAlwaysGroup && !liftedCardActive ? 30 : 50;
         group.position.set(0, 0, 0);
         var bindToCover = shelfAlwaysVisible() && particles && particles.rotation && !(contentList && contentList.isOpen());
         if (bindToCover) {
@@ -13393,6 +13719,7 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
           group.rotation.z += (0 - group.rotation.z) * 0.045;
         }
       } else {
+        group.renderOrder = 50;
         var t = uniforms.uTime.value;
         group.position.y = Math.sin(t * 0.3) * 0.04;
         group.position.x = px * 0.10;
@@ -13458,21 +13785,10 @@ void main(){ vec4 t = texture2D(uDotTex, gl_PointCoord); if (t.a < 0.02) discard
       return playPlaylistCard(cards.find(function(c){ return c.index === idx; }));
     },
     clearSelected: function() {
-      cards.forEach(function(c) {
-        if (c.selected) {
-          c.selected = false;
-          drawCard(c, c.item);
-        }
-      });
+      applySelectedIndex(-1);
     },
     setSelected: function(idx) {
-      cards.forEach(function(c, i) {
-        var next = i === idx;
-        if (c.selected !== next) {
-          c.selected = next;
-          drawCard(c, c.item);
-        }
-      });
+      applySelectedIndex(idx);
     },
     triggerAction: function(action) {
       if (!action) return;
@@ -13624,7 +13940,7 @@ function makeContentListManager() {
   var panelDirty = true, rowsDirty = true;
   var panelDrawAt = -10, rowDrawAt = -10;
   var LOADING_ANIM_INTERVAL = 1 / 30;
-  var DETAIL_BASE = { x: 2.72, y: -0.48, z: 1.50, rx: -0.02, ry: 0.08 };
+  var DETAIL_BASE = { x: 1.28, y: 0.18, z: 1.36, rx: -0.008, ry: 0.020 };
   function detailLayout() {
     return shelfLayoutProfile().detail || DETAIL_BASE;
   }
@@ -13655,7 +13971,7 @@ function makeContentListManager() {
     var mat = new THREE.MeshBasicMaterial({ map:tx, transparent:true, opacity:0.86, depthWrite:false, depthTest:false, side:THREE.DoubleSide });
     var geo = new THREE.PlaneGeometry(2.62, 3.02, 1, 1);
     var mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(0.20, 0.0, 0.20);
+    mesh.position.set(-0.02, 0.0, 0.20);
     mesh.renderOrder = 232;
     group.add(mesh);
     panel = { canvas:cv, texture:tx, mesh:mesh };
@@ -13756,16 +14072,22 @@ function makeContentListManager() {
     makeRoundRect(ctx, 14, 10, W - 28, H - 20, 22);
     var rowGrad = ctx.createLinearGradient(0, 0, W, H);
     var rowBgAlpha = shelfSettings().bgOpacity;
+    var centerRowBgAlpha = isCenter ? Math.max(rowBgAlpha, 0.92) : rowBgAlpha;
     if (isCenter) {
-      rowGrad.addColorStop(0, 'rgba(8,14,24,' + Math.min(0.98, rowBgAlpha + 0.02).toFixed(3) + ')');
-      rowGrad.addColorStop(0.48, 'rgba(0,0,0,' + Math.min(0.98, rowBgAlpha + 0.02).toFixed(3) + ')');
-      rowGrad.addColorStop(1, 'rgba(0,0,0,' + rowBgAlpha.toFixed(3) + ')');
+      rowGrad.addColorStop(0, 'rgba(8,14,24,' + Math.min(0.985, centerRowBgAlpha + 0.040).toFixed(3) + ')');
+      rowGrad.addColorStop(0.48, 'rgba(0,0,0,' + Math.min(0.985, centerRowBgAlpha + 0.030).toFixed(3) + ')');
+      rowGrad.addColorStop(1, 'rgba(0,0,0,' + Math.min(0.98, centerRowBgAlpha + 0.015).toFixed(3) + ')');
     } else {
       rowGrad.addColorStop(0, 'rgba(16,16,20,' + Math.max(0.20, rowBgAlpha - 0.02).toFixed(3) + ')');
       rowGrad.addColorStop(1, 'rgba(0,0,0,' + Math.max(0.20, rowBgAlpha - 0.04).toFixed(3) + ')');
     }
+    if (isCenter) {
+      ctx.shadowColor = canvasAccent(0.20);
+      ctx.shadowBlur = 18;
+    }
     ctx.fillStyle = rowGrad;
     ctx.fill();
+    ctx.shadowBlur = 0;
     ctx.strokeStyle = isCenter ? canvasAccent(0.48) : 'rgba(255,255,255,0.10)';
     ctx.lineWidth = isCenter ? 1.6 : 1;
     ctx.stroke();
@@ -13926,27 +14248,29 @@ function makeContentListManager() {
     var layout = detailLayout();
     var shelfLook = shelfSettings();
     var skullDetail = shouldUseSkullSafeShelfCamera();
-    var rowBaseX = skullDetail ? 0.22 : 0.18;
-    var rowSpreadX = skullDetail ? 0.030 : 0.025;
-    var rowIntroX = skullDetail ? 0.58 : 0.62;
+    var rowBaseX = skullDetail ? 0.22 : -0.04;
+    var rowSpreadX = skullDetail ? 0.030 : 0.014;
+    var rowIntroX = skullDetail ? 0.58 : 0.38;
     var rowCenterZ = skullDetail ? 0.62 : 0.62;
     var rowBackZ = skullDetail ? 0.58 : 0.58;
     var rowDepthStep = skullDetail ? 0.046 : 0.048;
     var px = rowBaseX + absD * rowSpreadX + (1 - reveal) * (rowIntroX + absD * rowSpreadX);
     var py = -delta * layout.rowStep + (1 - reveal) * (0.20 + (delta < 0 ? -0.10 : 0.10));
     var pz = (absD < 0.5 ? rowCenterZ : (rowBackZ - absD * rowDepthStep)) - (1 - reveal) * (skullDetail ? 0.10 : 0.16);
-    px += settle * ((skullDetail ? 0.11 : 0.20) + absD * (skullDetail ? 0.010 : 0.018));
+    px += settle * ((skullDetail ? 0.11 : 0.12) + absD * (skullDetail ? 0.010 : 0.012));
     py += settle * (delta < 0 ? -0.08 : 0.08);
     pz -= settle * (skullDetail ? 0.045 : 0.08);
-    px += parX * (skullDetail ? 0.022 : 0.040) * parWeight;
+    px += parX * (skullDetail ? 0.022 : 0.026) * parWeight;
     py += parY * (skullDetail ? 0.024 : 0.036) * parWeight;
     pz += (parY * (skullDetail ? 0.014 : 0.024) - parX * (skullDetail ? 0.010 : 0.020)) * parWeight;
     var scale = (absD < 0.5 ? 1.00 : Math.max(0.66, 0.94 - absD * 0.070)) * (0.90 + reveal * 0.10) * (1 + pulse * 0.052) * (1 - settle * 0.025) * layout.rowScale;
     row.mesh.position.set(px, py, pz);
     row.mesh.scale.setScalar(scale);
-    row.mesh.material.opacity = Math.min(1, (absD < 0.5 ? 1.0 : Math.max(0.34, 1.0 - absD * 0.12)) * reveal + pulse * 0.14) * shelfLook.opacity;
-    row.mesh.rotation.y = (skullDetail ? -0.070 : 0.18) + (1 - reveal) * (skullDetail ? 0.018 : 0.08) + parX * (skullDetail ? 0.010 : 0.026) * parWeight;
-    row.mesh.rotation.x = (skullDetail ? 0.010 : 0) - delta * (skullDetail ? 0.010 : 0.028) - parY * (skullDetail ? 0.006 : 0.018) * parWeight;
+    var rowOpacityBase = Math.min(1, (absD < 0.5 ? 1.0 : Math.max(0.34, 1.0 - absD * 0.12)) * reveal + pulse * 0.14);
+    var rowOpacityScale = absD < 0.5 ? Math.max(0.94, shelfLook.opacity) : shelfLook.opacity;
+    row.mesh.material.opacity = Math.min(1, rowOpacityBase * rowOpacityScale);
+    row.mesh.rotation.y = (skullDetail ? -0.070 : 0.10) + (1 - reveal) * (skullDetail ? 0.018 : 0.052) + parX * (skullDetail ? 0.010 : 0.018) * parWeight;
+    row.mesh.rotation.x = (skullDetail ? 0.010 : 0) - delta * (skullDetail ? 0.010 : 0.022) - parY * (skullDetail ? 0.006 : 0.014) * parWeight;
   }
 
   function disposeRowList(rowList) {
@@ -14049,10 +14373,22 @@ function makeContentListManager() {
         scene.add(group);
       }
       var openLayout = detailLayout();
+      var openSkullDetail = shouldUseSkullSafeShelfCamera();
+      var openDynamicDetail = !openSkullDetail && shouldUseShelfDynamicCamera('shelf-detail') && camera;
+      var openCoverRx = particles && particles.rotation ? particles.rotation.x : 0;
+      var openCoverRy = particles && particles.rotation ? particles.rotation.y : 0;
+      var openCoverRz = particles && particles.rotation ? particles.rotation.z : 0;
       group.userData.detailIntro = 1;
-      group.position.set(openLayout.x + 0.28, openLayout.y - 0.04, openLayout.z - 0.10);
-      group.rotation.y = openLayout.ry + 0.05;
-      group.rotation.x = openLayout.rx;
+      group.position.set(openLayout.x + (openSkullDetail ? 0.10 : 0.16), openLayout.y - (openSkullDetail ? 0.02 : 0.024), openLayout.z - (openSkullDetail ? 0.05 : 0.070));
+      if ((openSkullDetail || openDynamicDetail) && camera) {
+        group.quaternion.copy(camera.quaternion);
+        group.rotateX(openLayout.rx);
+        group.rotateY(openLayout.ry + (openSkullDetail ? 0.014 : 0.018));
+      } else {
+        group.rotation.y = openCoverRy * 0.82 + openLayout.ry + 0.018;
+        group.rotation.x = openCoverRx * 0.72 + openLayout.rx;
+        group.rotation.z = openCoverRz * 0.70;
+      }
       group.scale.setScalar(openLayout.scale * 0.965);
       if (window.gsap) {
         window.gsap.killTweensOf(group.userData);
@@ -14175,18 +14511,31 @@ function makeContentListManager() {
       var parY = pointerParallax.y || 0;
       var layout = detailLayout();
       var skullDetail = shouldUseSkullSafeShelfCamera();
+      var dynamicDetail = !skullDetail && shouldUseShelfDynamicCamera('shelf-detail') && camera;
+      var coverBoundDetail = !skullDetail && !dynamicDetail && particles && particles.rotation;
+      var coverBindX = coverBoundDetail ? particles.rotation.y * 0.18 : 0;
+      var coverBindY = coverBoundDetail ? particles.rotation.x * -0.16 : 0;
+      var coverBindZ = coverBoundDetail ? Math.abs(particles.rotation.y) * 0.030 : 0;
       group.position.set(
-        layout.x + intro * (skullDetail ? 0.10 : 0.28) + parX * (skullDetail ? 0.024 : 0.052),
-        layout.y - intro * (skullDetail ? 0.02 : 0.04) + parY * (skullDetail ? 0.026 : 0.044),
-        layout.z - intro * (skullDetail ? 0.05 : 0.10) + parY * (skullDetail ? 0.014 : 0.026) - parX * (skullDetail ? 0.010 : 0.018)
+        layout.x + coverBindX + intro * (skullDetail ? 0.10 : 0.16) + parX * (skullDetail ? 0.024 : 0.030),
+        layout.y + coverBindY - intro * (skullDetail ? 0.02 : 0.024) + parY * (skullDetail ? 0.026 : 0.026),
+        layout.z + coverBindZ - intro * (skullDetail ? 0.05 : 0.070) + parY * (skullDetail ? 0.014 : 0.016) - parX * (skullDetail ? 0.010 : 0.010)
       );
       if (skullDetail && camera) {
         group.quaternion.copy(camera.quaternion);
         group.rotateX(layout.rx - parY * 0.004);
         group.rotateY(layout.ry + intro * 0.004 + parX * 0.004);
+      } else if (dynamicDetail) {
+        group.quaternion.copy(camera.quaternion);
+        group.rotateX(layout.rx - parY * 0.006);
+        group.rotateY(layout.ry + intro * 0.012 + parX * 0.008);
       } else {
-        group.rotation.y = layout.ry + intro * 0.05 + parX * 0.034;
-        group.rotation.x = layout.rx - parY * 0.022;
+        var coverRx = particles && particles.rotation ? particles.rotation.x : 0;
+        var coverRy = particles && particles.rotation ? particles.rotation.y : 0;
+        var coverRz = particles && particles.rotation ? particles.rotation.z : 0;
+        group.rotation.x += ((coverRx * 0.72 + layout.rx - parY * 0.010) - group.rotation.x) * 0.16;
+        group.rotation.y += ((coverRy * 0.82 + layout.ry + intro * 0.018 + parX * 0.014) - group.rotation.y) * 0.16;
+        group.rotation.z += ((coverRz * 0.70) - group.rotation.z) * 0.14;
       }
       group.scale.setScalar(layout.scale * (1 - intro * (skullDetail ? 0.020 : 0.035)));
       centerSmooth += (centerTarget - centerSmooth) * 0.18;
@@ -14208,23 +14557,32 @@ function makeContentListManager() {
     },
     next: function() {
       if (allTracks.length) {
+        var prevTarget = Math.round(centerTarget);
         centerTarget = Math.min(allTracks.length - 1, centerTarget + 1);
+        var nextTarget = Math.round(centerTarget);
         syncRenderedRows(false);
-        pulseObjectValue(rows.find(function(r){ return r.index === Math.round(centerTarget); }), 'fxPulse', 0.48, 0.36);
+        if (nextTarget !== prevTarget) playShelfSelectTick(1, 'row');
+        pulseObjectValue(rows.find(function(r){ return r.index === nextTarget; }), 'fxPulse', 0.48, 0.36);
       }
     },
     prev: function() {
       if (allTracks.length) {
+        var prevTarget = Math.round(centerTarget);
         centerTarget = Math.max(0, centerTarget - 1);
+        var nextTarget = Math.round(centerTarget);
         syncRenderedRows(false);
-        pulseObjectValue(rows.find(function(r){ return r.index === Math.round(centerTarget); }), 'fxPulse', 0.48, 0.36);
+        if (nextTarget !== prevTarget) playShelfSelectTick(-1, 'row');
+        pulseObjectValue(rows.find(function(r){ return r.index === nextTarget; }), 'fxPulse', 0.48, 0.36);
       }
     },
     scrollBy: function(d) {
       if (allTracks.length) {
+        var prevTarget = Math.round(centerTarget);
         centerTarget = Math.max(0, Math.min(allTracks.length - 1, centerTarget + d));
+        var nextTarget = Math.round(centerTarget);
         syncRenderedRows(false);
-        pulseObjectValue(rows.find(function(r){ return r.index === Math.round(centerTarget); }), 'fxPulse', 0.48, 0.36);
+        if (nextTarget !== prevTarget) playShelfSelectTick(d, 'row');
+        pulseObjectValue(rows.find(function(r){ return r.index === nextTarget; }), 'fxPulse', 0.48, 0.36);
       }
     },
     getRows: function() { return rows; },
@@ -14240,6 +14598,39 @@ function makeContentListManager() {
       if (!hits.length) return null;
       var row = rows.find(function(r){ return r.mesh === hits[0].object; });
       return { row: row, uv: hits[0].uv };
+    },
+    pickRowAtScreen: function(sx, sy) {
+      if (!rows.length || !open) return null;
+      var ordered = rows.filter(function(r){ return r.mesh && r.mesh.visible; }).sort(function(a, b){
+        return (b.mesh.renderOrder || 0) - (a.mesh.renderOrder || 0);
+      });
+      for (var ri = 0; ri < ordered.length; ri++) {
+        var row = ordered[ri];
+        var params = row.mesh.geometry && row.mesh.geometry.parameters || {};
+        var hw = (params.width || 2.50) / 2;
+        var hh = (params.height || 0.36) / 2;
+        var pts = [
+          new THREE.Vector3(-hw, -hh, 0),
+          new THREE.Vector3( hw, -hh, 0),
+          new THREE.Vector3( hw,  hh, 0),
+          new THREE.Vector3(-hw,  hh, 0),
+        ];
+        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        row.mesh.updateMatrixWorld(true);
+        for (var pi = 0; pi < pts.length; pi++) {
+          pts[pi].applyMatrix4(row.mesh.matrixWorld).project(camera);
+          var x = (pts[pi].x + 1) * innerWidth / 2;
+          var y = (1 - pts[pi].y) * innerHeight / 2;
+          minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+        }
+        var padX = 24, padY = 16;
+        if (sx < minX - padX || sx > maxX + padX || sy < minY - padY || sy > maxY + padY) continue;
+        var u = clampRange((sx - minX) / Math.max(1, maxX - minX), 0, 1);
+        var v = 1 - clampRange((sy - minY) / Math.max(1, maxY - minY), 0, 1);
+        return { row: row, uv: { x: u, y: v }, screenPick: true };
+      }
+      return null;
     },
     raycastPanel: function(rc) {
       if (!panel || !panel.mesh) return null;
@@ -14268,6 +14659,39 @@ function makeContentListManager() {
       }
       var pad = 42;
       return sx >= minX - pad && sx <= maxX + pad && sy >= minY - pad && sy <= maxY + pad;
+    },
+    rowActionAtScreen: function(row, sx, sy) {
+      if (!row || !row.mesh || !row.mesh.visible) return null;
+      var song = row.song || {};
+      var isCenter = Math.abs(row.index - Math.round(centerSmooth)) < 0.5;
+      if (!isCenter || !((song && song.id) || song.type === 'podcast-radio')) return null;
+      var params = row.mesh.geometry && row.mesh.geometry.parameters || {};
+      var hw = (params.width || 2.50) / 2;
+      var hh = (params.height || 0.36) / 2;
+      var corners = [
+        new THREE.Vector3(-hw, -hh, 0),
+        new THREE.Vector3( hw, -hh, 0),
+        new THREE.Vector3( hw,  hh, 0),
+        new THREE.Vector3(-hw,  hh, 0),
+      ];
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      row.mesh.updateMatrixWorld(true);
+      for (var i = 0; i < corners.length; i++) {
+        corners[i].applyMatrix4(row.mesh.matrixWorld).project(camera);
+        var x = (corners[i].x + 1) * innerWidth / 2;
+        var y = (1 - corners[i].y) * innerHeight / 2;
+        minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+      }
+      var w = Math.max(1, maxX - minX);
+      var h = Math.max(1, maxY - minY);
+      var u = clampRange((sx - minX) / w, 0, 1);
+      var v = clampRange((sy - minY) / h, 0, 1);
+      if (u > 0.60 && u < 0.68 && v > 0.12 && v < 0.88) return 'like';
+      if (u >= 0.68 && u < 0.75 && v > 0.12 && v < 0.88) return 'collect';
+      if (u >= 0.75 && u < 0.82 && v > 0.12 && v < 0.88) return 'next';
+      if (u >= 0.82 && v > 0.10 && v < 0.90) return 'play';
+      return null;
     },
     playRow: function(row) {
       // 把整个歌单导入队列, 从这首开始播
@@ -14378,9 +14802,57 @@ function raycasterFromPointerEvent(e) {
   rc.setFromCamera(new THREE.Vector2(mx, my), camera);
   return rc;
 }
-function pointerCardHit(rc, e) {
+function pointerCardHit(rc, e, screenPad) {
   if (!shelfManager) return null;
-  return shelfManager.raycastCards(rc) || (shelfManager.pickCardAtScreen && shelfManager.pickCardAtScreen(e.clientX, e.clientY));
+  return shelfManager.raycastCards(rc) || (shelfManager.pickCardAtScreen && shelfManager.pickCardAtScreen(e.clientX, e.clientY, screenPad));
+}
+function isSideShelfFocusHit(e) {
+  if (!e || !shelfManager || !shelfManager.getMode || shelfManager.getMode() !== 'side') return false;
+  if (shelfPinnedOpen) return true;
+  if (shelfAlwaysVisible()) return !!pointerCardHit(raycasterFromPointerEvent(e), e, 18);
+  if (!shelfAutoHiddenInputReady()) return false;
+  if (shelfVisibility > 0.34 && (isShelfClickZone(e) || isShelfPreviewUseZone(e))) return true;
+  return !!(shelfPreviewIsVisible() && pointerCardHit(raycasterFromPointerEvent(e), e, 24));
+}
+function updateShelfCardHoverSelection(e) {
+  if (!shelfManager || !shelfManager.clearSelected || !shelfManager.setSelected) return;
+  if (!e || document.body.classList.contains('splash-active') || isPointerOverUi(e)) {
+    shelfManager.clearSelected();
+    return;
+  }
+  var mode = shelfManager.getMode && shelfManager.getMode();
+  if (!mode || mode === 'off') {
+    shelfManager.clearSelected();
+    return;
+  }
+  if (shelfManager.hasOpenContent && shelfManager.hasOpenContent()) {
+    shelfManager.clearSelected();
+    return;
+  }
+  var canInteract = shelfManager.canInteract && shelfManager.canInteract();
+  if (!canInteract) {
+    shelfManager.clearSelected();
+    return;
+  }
+  if (mode === 'side') {
+    if (!shelfPinnedOpen && shelfAlwaysVisible()) {
+      var alwaysHit = pointerCardHit(raycasterFromPointerEvent(e), e, 18);
+      if (alwaysHit && alwaysHit.card) shelfManager.setSelected(alwaysHit.card.index);
+      else shelfManager.clearSelected();
+      return;
+    }
+    var sideUsable = shelfPinnedOpen || shelfAutoHiddenInputReady();
+    if (!sideUsable) {
+      shelfManager.clearSelected();
+      return;
+    }
+  } else if (mode !== 'stage') {
+    shelfManager.clearSelected();
+    return;
+  }
+  var hit = pointerCardHit(raycasterFromPointerEvent(e), e);
+  if (hit && hit.card) shelfManager.setSelected(hit.card.index);
+  else shelfManager.clearSelected();
 }
 function isShelfPlaylistPlayHit(hit) {
   if (!hit || !hit.card || !hit.uv || !hit.card.item || hit.card.item.type !== 'playlist') return false;
@@ -14401,6 +14873,7 @@ renderer.domElement.addEventListener('click', function(e){
     var cl = shelfManager.getContentList && shelfManager.getContentList();
     if (cl) {
       var rowHit = cl.raycastRows(rc);
+      if (!rowHit && cl.pickRowAtScreen) rowHit = cl.pickRowAtScreen(e.clientX, e.clientY);
       if (rowHit) {
         if (cl.pulseRow) cl.pulseRow(rowHit.row, 0.72);
         var selectedRow = Math.abs(rowHit.row.index - cl.getCenterIdx()) < 0.5;
@@ -14409,6 +14882,11 @@ renderer.domElement.addEventListener('click', function(e){
         var hitCollectButton = rowHit.uv && rowHit.uv.x >= 0.68 && rowHit.uv.x < 0.75 && rowHit.uv.y > 0.20 && rowHit.uv.y < 0.82;
         var hitNextButton = rowHit.uv && rowHit.uv.x >= 0.75 && rowHit.uv.x < 0.82 && rowHit.uv.y > 0.20 && rowHit.uv.y < 0.82;
         var hitPlayButton = rowHit.uv && rowHit.uv.x >= 0.82 && rowHit.uv.y > 0.20 && rowHit.uv.y < 0.82;
+        var screenAction = (!rowHit.uv && cl.rowActionAtScreen) ? cl.rowActionAtScreen(rowHit.row, e.clientX, e.clientY) : null;
+        hitLikeButton = hitLikeButton || screenAction === 'like';
+        hitCollectButton = hitCollectButton || screenAction === 'collect';
+        hitNextButton = hitNextButton || screenAction === 'next';
+        hitPlayButton = hitPlayButton || screenAction === 'play';
         // 详情页支持直接点歌曲播放；红心/收藏按钮仍然保留原动作。
         if (selectedRow && !rowIsPodcastRadio && hitLikeButton) {
           toggleLikeDetailSong(rowHit.row.song);
@@ -14435,8 +14913,8 @@ renderer.domElement.addEventListener('click', function(e){
   }
 
   // 一级卡片
-  var hit = pointerCardHit(rc, e);
-  if (mode === 'side' && !shelfPinnedOpen) return;
+  var hit = pointerCardHit(rc, e, mode === 'side' && !shelfPinnedOpen && shelfAlwaysVisible() ? 18 : undefined);
+  if (mode === 'side' && !shelfPinnedOpen && !canUseSideShelfWithoutPinnedOpen()) return;
 
   if (hit) {
     if (mode === 'side') setShelfPinnedOpen(true, true);
@@ -14482,8 +14960,8 @@ renderer.domElement.addEventListener('contextmenu', function(e){
   if (!shelfPinnedOpen && typeof setFocusZone === 'function') setFocusZone(null, true);
 });
 
-// 滚轮: 在卡片区域内滚动 = 滚卡片; 否则 = 缩放视角
-//   side 模式: 鼠标 x > 60% 屏幕宽
+// 滚轮: 在真实卡片或右侧窄热区内滚卡片; 否则保留给封面粒子/视角
+//   side 模式: 常驻不再用半屏预览区接管滚轮
 //   stage 模式: 鼠标 y > 60% 屏幕高
 //   shift + wheel: 强制滚卡片
 var wheelOverShelf = false;
@@ -14508,10 +14986,15 @@ renderer.domElement.addEventListener('wheel', function(e){
   var mode = shelfManager.getMode();
   var inShelfArea = false;
   var canScrollShelf = shelfManager.canInteract && shelfManager.canInteract();
-  var shelfPreviewActive = shelfHoverCue.target > 0 || shelfHoverCue.value > 0.18 || shelfVisibility > 0.14;
-  if (canScrollShelf && e.shiftKey && (mode !== 'side' || shelfPinnedOpen || shelfPreviewActive)) inShelfArea = true;
-  else if (canScrollShelf && mode === 'side' && (shelfPinnedOpen || shelfPreviewActive) && (isShelfClickZone(e) || isShelfPreviewUseZone(e) || pointerCardHit(rc, e))) inShelfArea = true;
-  else if (canScrollShelf && mode === 'stage' && pointerCardHit(rc, e)) inShelfArea = true;
+  var shelfPreviewActive = shelfAutoHiddenInputReady();
+  var cardWheelHit = canScrollShelf ? pointerCardHit(rc, e, mode === 'side' && !shelfPinnedOpen && shelfAlwaysVisible() ? 18 : undefined) : null;
+  if (canScrollShelf && e.shiftKey && (mode !== 'side' || shelfPinnedOpen || shelfPreviewActive || shelfAlwaysVisible())) inShelfArea = true;
+  else if (canScrollShelf && mode === 'side') {
+    if (shelfPinnedOpen) inShelfArea = isShelfWheelZone(e) || !!cardWheelHit;
+    else if (shelfAlwaysVisible()) inShelfArea = !!cardWheelHit;
+    else if (shelfPreviewActive) inShelfArea = isShelfWheelZone(e) || !!cardWheelHit;
+  }
+  else if (canScrollShelf && mode === 'stage' && cardWheelHit) inShelfArea = true;
   if (inShelfArea) {
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -17269,6 +17752,84 @@ function resumeAudioAnalysis() {
   return Promise.resolve();
 }
 
+function ensureUiSfxContext() {
+  var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) return null;
+  if (!uiSfxCtx || uiSfxCtx.state === 'closed') uiSfxCtx = new AudioContextCtor();
+  if (uiSfxCtx.state === 'suspended' && uiSfxCtx.resume) uiSfxCtx.resume().catch(function(){});
+  return uiSfxCtx;
+}
+
+function playShelfSelectTick(direction, variant) {
+  var nowMs = performance.now();
+  var minGap = variant === 'row' ? 36 : 42;
+  if (nowMs - lastShelfSelectSfxAt < minGap) return;
+  var ctx = ensureUiSfxContext();
+  if (!ctx) return;
+  lastShelfSelectSfxAt = nowMs;
+  var dir = direction < 0 ? -1 : 1;
+  var pitch = dir > 0 ? 1.035 : 0.965;
+  var rowScale = variant === 'row' ? 0.74 : 1.0;
+  var volumeScale = 0.38 + Math.max(0, Math.min(1, targetVolume == null ? 0.65 : targetVolume)) * 0.62;
+  var t = ctx.currentTime + 0.002;
+  var out = ctx.createGain();
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.linearRampToValueAtTime(0.058 * rowScale * volumeScale, t + 0.002);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + 0.082);
+  out.connect(ctx.destination);
+
+  var sampleRate = ctx.sampleRate || 44100;
+  var len = Math.max(1, Math.floor(sampleRate * 0.034));
+  var buf = ctx.createBuffer(1, len, sampleRate);
+  var data = buf.getChannelData(0);
+  for (var i = 0; i < len; i++) {
+    var e = Math.pow(1 - i / len, 4.2);
+    data[i] = (Math.random() * 2 - 1) * e;
+  }
+  var noise = ctx.createBufferSource();
+  noise.buffer = buf;
+  var hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.setValueAtTime(4200 * pitch, t);
+  var bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.setValueAtTime(8400 * pitch, t);
+  bp.Q.setValueAtTime(7.2, t);
+  var ng = ctx.createGain();
+  ng.gain.setValueAtTime(0.56, t);
+  noise.connect(hp);
+  hp.connect(bp);
+  bp.connect(ng);
+  ng.connect(out);
+  noise.start(t);
+  noise.stop(t + 0.040);
+
+  function clickOsc(type, freq, delay, dur, gainValue, bend) {
+    var osc = ctx.createOscillator();
+    var g = ctx.createGain();
+    var start = t + delay;
+    var end = start + dur;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq * pitch, start);
+    osc.frequency.exponentialRampToValueAtTime(freq * pitch * (bend || 0.72), end);
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.linearRampToValueAtTime(gainValue, start + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, end);
+    osc.connect(g);
+    g.connect(out);
+    osc.start(start);
+    osc.stop(end + 0.004);
+  }
+
+  clickOsc('triangle', 720, 0.000, 0.030, 0.18, 0.70);
+  clickOsc('square', 2180, 0.004, 0.022, 0.30, 0.86);
+  clickOsc('triangle', 4200, 0.011, 0.018, 0.18, 0.94);
+  clickOsc('square', 7100, 0.018, 0.012, 0.070, 0.98);
+  setTimeout(function(){
+    try { out.disconnect(); } catch (_) {}
+  }, 160);
+}
+
 function clearAudioFadeTimers() {
   if (audioFadeTimer) {
     clearTimeout(audioFadeTimer);
@@ -19642,16 +20203,22 @@ function normalizeFxArchiveSnapshot(raw) {
     desktopLyricsCinema: raw.desktopLyricsCinema !== false,
     desktopLyricsHighlight: raw.desktopLyricsHighlight === true,
     desktopLyricsFps: normalizeDesktopLyricsFps(Object.prototype.hasOwnProperty.call(raw, 'desktopLyricsFps') ? raw.desktopLyricsFps : fxDefaults.desktopLyricsFps),
+    performanceBackground: normalizePerformanceBackgroundMode(raw.performanceBackground, raw.liveBackgroundKeep === true),
+    performanceQuality: normalizePerformanceQuality(raw.performanceQuality),
+    liveBackgroundKeep: normalizePerformanceBackgroundMode(raw.performanceBackground, raw.liveBackgroundKeep === true) === 'keep',
     particleLyrics: raw.particleLyrics !== false,
     backCover: !!raw.backCover,
     shelf: archiveMode(raw, 'shelf', /^(off|side|stage)$/, fxDefaults.shelf),
     shelfCameraMode: archiveMode(raw, 'shelfCameraMode', /^(dynamic|static)$/, fxDefaults.shelfCameraMode),
     shelfPresence: archiveMode(raw, 'shelfPresence', /^(auto|always)$/, fxDefaults.shelfPresence),
+    shelfShowPodcasts: raw.shelfShowPodcasts !== false,
+    shelfMergeCollections: raw.shelfMergeCollections === true,
     shelfSize: archiveNumber(raw, 'shelfSize', fxDefaults.shelfSize, 0.65, 1.45),
     shelfOffsetX: archiveNumber(raw, 'shelfOffsetX', fxDefaults.shelfOffsetX, -1.2, 1.2),
     shelfOffsetY: archiveNumber(raw, 'shelfOffsetY', fxDefaults.shelfOffsetY, -0.9, 0.9),
     shelfOffsetZ: archiveNumber(raw, 'shelfOffsetZ', fxDefaults.shelfOffsetZ, -0.9, 0.9),
     shelfAngleY: archiveNumber(raw, 'shelfAngleY', fxDefaults.shelfAngleY, -30, 30),
+    shelfAngleYManual: raw.shelfAngleYManual === true,
     shelfOpacity: archiveNumber(raw, 'shelfOpacity', fxDefaults.shelfOpacity, 0.25, 1),
     shelfBgOpacity: archiveNumber(raw, 'shelfBgOpacity', fxDefaults.shelfBgOpacity, 0.25, 0.98),
     shelfAccentColor: normalizeHexColor(raw.shelfAccentColor || fxDefaults.shelfAccentColor, fxDefaults.shelfAccentColor),
@@ -19686,6 +20253,21 @@ function saveUserFxArchives() {
     showToast('用户存档保存失败，本地存储空间可能不足');
   }
 }
+function hasStoredUserFxArchives() {
+  try {
+    return localStorage.getItem(USER_FX_ARCHIVE_STORE_KEY) != null;
+  } catch (e) {
+    return true;
+  }
+}
+function createPackagedDefaultUserFxArchiveSlot() {
+  return {
+    name: normalizeUserFxArchiveName(PACKAGED_DEFAULT_USER_FX_ARCHIVE_NAME, 0),
+    createdAt: PACKAGED_DEFAULT_USER_FX_ARCHIVE_EXPORTED_AT,
+    savedAt: PACKAGED_DEFAULT_USER_FX_ARCHIVE_SAVED_AT,
+    snapshot: normalizeFxArchiveSnapshot(clonePackagedDefaultFxSnapshot())
+  };
+}
 function formatUserArchiveTime(ts) {
   ts = Number(ts) || 0;
   if (!ts) return '空槽位';
@@ -19717,7 +20299,7 @@ function applyFxArchiveSnapshot(snapshot) {
     fx[key] = data[key];
   });
   normalizeDevelopmentLockedFxState();
-  setPreset(targetPreset, { silent: true, preserveCamera: false, skipTransition: false, noSave: true });
+  setPreset(targetPreset, { silent: true, preserveCamera: false, skipTransition: false, noSave: true, commitPlaybackPreset: true });
   applyCoverParticleResolution(fx.coverResolution, { reload: true });
   if (fx.floatLayer) createFloatLayer(); else destroyFloatLayer();
   setParticleLyricsSilently(fx.particleLyrics);
@@ -19727,16 +20309,25 @@ function applyFxArchiveSnapshot(snapshot) {
     queueAIDepthForCurrentCover(true);
   }
   setShelfMode(fx.shelf);
+  if (shelfManager && shelfManager.rebuild) shelfManager.rebuild(true);
+  if (shelfManager && shelfManager.refreshTheme) shelfManager.refreshTheme();
   setCamMode(fx.cam);
   updateFxInputs();
   applySavedLyricPaletteState();
   refreshCurrentLyricStyle();
   applyDesktopLyricsState(true);
   applyWallpaperModeState(true);
+  updateRenderPowerClasses();
+  applyRendererPowerMode();
   saveLyricLayout();
   return true;
 }
+var hadStoredUserFxArchives = hasStoredUserFxArchives();
 var userFxArchives = readUserFxArchives();
+if (!hadStoredUserFxArchives) {
+  userFxArchives = [createPackagedDefaultUserFxArchiveSlot()];
+  saveUserFxArchives();
+}
 var userFxArchiveEditing = -1;
 function renderUserFxArchives() {
   var grid = document.getElementById('user-archive-grid');
@@ -20691,9 +21282,12 @@ function setPreset(p, opts) {
     orbit.baselineTheta = p === 5 ? -0.52 : (p === 6 ? 0.18 : 0.0);
   }
   if (changed && !opts.silent) showToast('视觉预设: ' + presetMeta[p].name);
-  if (changed && !opts.noSave) {
+  var shouldCommitPlaybackPreset = !!opts.commitPlaybackPreset || !opts.noSave;
+  if (shouldCommitPlaybackPreset) {
     playbackVisualPreset = p;
     startupVisualPreviewActive = false;
+  }
+  if (!opts.noSave) {
     saveLyricLayout();
   }
 }
@@ -20805,8 +21399,47 @@ function updateDesktopLyricsFpsControls() {
     btn.classList.toggle('active', normalizeDesktopLyricsFps(btn.getAttribute('data-desktop-lyrics-fps')) === fps);
   });
 }
+function updatePerformanceControls() {
+  fx.performanceBackground = normalizePerformanceBackgroundMode(fx.performanceBackground, fx.liveBackgroundKeep === true);
+  fx.liveBackgroundKeep = fx.performanceBackground === 'keep';
+  fx.performanceQuality = normalizePerformanceQuality(fx.performanceQuality);
+  document.querySelectorAll('#performance-background-seg [data-performance-background]').forEach(function(btn){
+    btn.classList.toggle('active', btn.getAttribute('data-performance-background') === fx.performanceBackground);
+  });
+  document.querySelectorAll('#performance-quality-seg [data-performance-quality]').forEach(function(btn){
+    btn.classList.toggle('active', btn.getAttribute('data-performance-quality') === fx.performanceQuality);
+  });
+  var liveBackgroundKeepToggle = document.getElementById('t-liveBackgroundKeep');
+  if (liveBackgroundKeepToggle) liveBackgroundKeepToggle.classList.toggle('on', fx.liveBackgroundKeep === true);
+}
+function setPerformanceBackgroundMode(mode, silent) {
+  var next = normalizePerformanceBackgroundMode(mode, false);
+  fx.performanceBackground = next;
+  fx.liveBackgroundKeep = next === 'keep';
+  updatePerformanceControls();
+  saveLyricLayout();
+  updateRenderPowerClasses();
+  applyRendererPowerMode();
+  if (next === 'keep') recoverVisualsAfterBackground('performance-background-keep');
+  else if (next === 'release' && isDeepBackgroundMode()) trimRuntimeCaches('performance-release', true);
+  if (!silent) {
+    showToast(next === 'keep' ? '后台策略: 保持运行' : (next === 'release' ? '后台策略: 停止并释放' : '后台策略: 自动优化'));
+  }
+}
+function setPerformanceQualityMode(mode, silent) {
+  var next = normalizePerformanceQuality(mode);
+  fx.performanceQuality = next;
+  updatePerformanceControls();
+  applyRendererPowerMode();
+  saveLyricLayout();
+  if (!silent) {
+    var label = next === 'eco' ? '低' : (next === 'balanced' ? '中' : (next === 'ultra' ? '超高' : '高'));
+    showToast('画质档位: ' + label);
+  }
+}
 function updateFxInputs() {
   normalizeDevelopmentLockedFxState();
+  applyShelfCameraDefaultAngle(false);
   setRange('fx-intensity', fx.intensity);
   setRange('fx-cineshake', fx.cinemaShake);
   setRange('fx-depth', fx.depth);
@@ -20868,6 +21501,13 @@ function updateFxInputs() {
   updateDesktopLyricsFpsControls();
   var wallpaperModeToggle = document.getElementById('t-wallpaperMode');
   if (wallpaperModeToggle) wallpaperModeToggle.classList.toggle('on', fx.wallpaperMode);
+  var shelfPodcastsToggle = document.getElementById('t-shelfShowPodcasts');
+  if (shelfPodcastsToggle) shelfPodcastsToggle.classList.toggle('on', fx.shelfShowPodcasts !== false);
+  var shelfMergeToggle = document.getElementById('t-shelfMergeCollections');
+  if (shelfMergeToggle) shelfMergeToggle.classList.toggle('on', fx.shelfMergeCollections === true);
+  var liveBackgroundKeepToggle = document.getElementById('t-liveBackgroundKeep');
+  if (liveBackgroundKeepToggle) liveBackgroundKeepToggle.classList.toggle('on', fx.liveBackgroundKeep === true);
+  updatePerformanceControls();
   updateDevelopmentFxControls();
   var aiDepthToggle = document.getElementById('t-aidepth');
   if (aiDepthToggle) aiDepthToggle.classList.toggle('on', fx.aiDepth);
@@ -20895,7 +21535,12 @@ function animateFxResetButton(btn) {
 }
 function resetFxSliderValue(id, key, btn) {
   if (!Object.prototype.hasOwnProperty.call(fxDefaults, key)) return;
-  fx[key] = fxDefaults[key];
+  if (key === 'shelfAngleY') {
+    fx.shelfAngleYManual = false;
+    fx.shelfAngleY = shelfDefaultAngleForCameraMode(fx.shelfCameraMode);
+  } else {
+    fx[key] = fxDefaults[key];
+  }
   setRange(id, fx[key]);
   if (key === 'coverResolution') applyCoverParticleResolution(fx[key], { reload: true });
   if (key === 'controlGlassChromaticOffset') applyControlGlassChromaticOffset();
@@ -21539,7 +22184,10 @@ function bindFxPanel() {
       if (pair[1] === 'shelfOffsetX') fx.shelfOffsetX = clampRange(fx.shelfOffsetX, -1.2, 1.2);
       if (pair[1] === 'shelfOffsetY') fx.shelfOffsetY = clampRange(fx.shelfOffsetY, -0.9, 0.9);
       if (pair[1] === 'shelfOffsetZ') fx.shelfOffsetZ = clampRange(fx.shelfOffsetZ, -0.9, 0.9);
-      if (pair[1] === 'shelfAngleY') fx.shelfAngleY = Math.round(clampRange(fx.shelfAngleY, -30, 30));
+      if (pair[1] === 'shelfAngleY') {
+        fx.shelfAngleYManual = true;
+        fx.shelfAngleY = Math.round(clampRange(fx.shelfAngleY, -30, 30));
+      }
       if (pair[1] === 'shelfOpacity') fx.shelfOpacity = clampRange(fx.shelfOpacity, 0.25, 1);
       if (pair[1] === 'shelfBgOpacity') fx.shelfBgOpacity = clampRange(fx.shelfBgOpacity, 0.25, 0.98);
       if (pair[1] === 'lyricTiltX' || pair[1] === 'lyricTiltY') fx[pair[1]] = Math.round(clampRange(fx[pair[1]], -42, 42));
@@ -21697,6 +22345,16 @@ function bindFxPanel() {
       showToast(fx.desktopLyricsFps ? ('桌面歌词帧数 ' + fx.desktopLyricsFps) : '桌面歌词帧数无上限');
     });
   });
+  document.querySelectorAll('#performance-background-seg [data-performance-background]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      setPerformanceBackgroundMode(btn.getAttribute('data-performance-background'));
+    });
+  });
+  document.querySelectorAll('#performance-quality-seg [data-performance-quality]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      setPerformanceQualityMode(btn.getAttribute('data-performance-quality'));
+    });
+  });
   updateFxInputs();
 }
 function toggleFx(key) {
@@ -21714,12 +22372,28 @@ function toggleFx(key) {
   var toggle = document.getElementById(toggleId);
   if (toggle) toggle.classList.toggle('on', fx[key]);
   syncFxUniforms();
-  if (key === 'lyricCameraLock' || key === 'lyricGlow' || key === 'lyricGlowBeat' || key === 'lyricGlowParticles' || key === 'bloom' || key === 'edge' || key === 'cinema' || key === 'desktopLyrics' || key === 'desktopLyricsClickThrough' || key === 'desktopLyricsCinema' || key === 'desktopLyricsHighlight' || key === 'wallpaperMode') saveLyricLayout();
+  if (key === 'lyricCameraLock' || key === 'lyricGlow' || key === 'lyricGlowBeat' || key === 'lyricGlowParticles' || key === 'bloom' || key === 'edge' || key === 'cinema' || key === 'desktopLyrics' || key === 'desktopLyricsClickThrough' || key === 'desktopLyricsCinema' || key === 'desktopLyricsHighlight' || key === 'wallpaperMode' || key === 'shelfShowPodcasts' || key === 'shelfMergeCollections' || key === 'liveBackgroundKeep') saveLyricLayout();
   if (key === 'floatLayer') { if (fx.floatLayer) createFloatLayer(); else destroyFloatLayer(); }
   if (key === 'desktopLyrics') applyDesktopLyricsState(true);
   if (key === 'desktopLyricsClickThrough' || key === 'desktopLyricsCinema' || key === 'desktopLyricsHighlight') pushDesktopLyricsState(true);
   if (key === 'lyricGlow' || key === 'lyricGlowBeat' || key === 'lyricGlowParticles') pushDesktopLyricsState(true);
   if (key === 'wallpaperMode') applyWallpaperModeState(true);
+  if (key === 'shelfShowPodcasts' || key === 'shelfMergeCollections') {
+    if (shelfManager && shelfManager.rebuild) shelfManager.rebuild(true);
+    if (shelfManager && shelfManager.refreshTheme) shelfManager.refreshTheme();
+  }
+  if (key === 'liveBackgroundKeep') {
+    fx.performanceBackground = fx.liveBackgroundKeep ? 'keep' : 'auto';
+    updatePerformanceControls();
+    saveLyricLayout();
+    if (fx.liveBackgroundKeep && backgroundCacheTrimTimer) {
+      clearTimeout(backgroundCacheTrimTimer);
+      backgroundCacheTrimTimer = 0;
+    }
+    updateRenderPowerClasses();
+    applyRendererPowerMode();
+    if (fx.liveBackgroundKeep) recoverVisualsAfterBackground('live-background-keep');
+  }
   if (key === 'lyricGlow') showToast(fx.lyricGlow ? '歌词溢光已开启' : '歌词溢光已关闭');
   if (key === 'lyricGlowBeat') showToast(fx.lyricGlowBeat ? '歌词溢光跟随鼓点' : '歌词溢光已脱离鼓点');
   if (key === 'lyricGlowParticles') showToast(fx.lyricGlowParticles ? '歌词光粒已开启' : '歌词光粒已关闭');
@@ -21728,6 +22402,9 @@ function toggleFx(key) {
   if (key === 'desktopLyricsCinema') showToast(fx.desktopLyricsCinema !== false ? '桌面歌词电影震动已开启' : '桌面歌词电影震动已关闭，基础漂浮保留');
   if (key === 'desktopLyricsHighlight') showToast(fx.desktopLyricsHighlight === true ? '桌面歌词高亮跟随已开启' : '桌面歌词高亮跟随已关闭');
   if (key === 'wallpaperMode') showToast(fx.wallpaperMode ? '壁纸模式已开启' : '壁纸模式已关闭');
+  if (key === 'shelfShowPodcasts') showToast(fx.shelfShowPodcasts !== false ? '3D歌单架已显示播客歌单' : '3D歌单架已隐藏播客歌单');
+  if (key === 'shelfMergeCollections') showToast(fx.shelfMergeCollections === true ? '我的歌单与收藏歌单已合并滚动' : '收藏歌单恢复滚到底切页');
+  if (key === 'liveBackgroundKeep') showToast(fx.liveBackgroundKeep ? '直播后台保持已开启' : '直播后台保持已关闭');
   if (key === 'lyricCameraLock') showToast(fx.lyricCameraLock ? '歌词已绑定镜头' : '歌词已恢复自由漂浮');
   if (key === 'bloom') showToast(fx.bloom ? '溢光已开启' : '溢光已关闭');
   if (key === 'edge') showToast(fx.edge ? '已开启轮廓高亮' : '已关闭轮廓高亮');
@@ -21770,15 +22447,21 @@ function resetFx() {
     cam: savedCam,
     shelf: savedShelf,
     shelfCameraMode: savedShelfCameraMode,
-    shelfPresence: savedShelfPresence
+    shelfPresence: savedShelfPresence,
+    shelfAngleY: shelfDefaultAngleForCameraMode(savedShelfCameraMode),
+    shelfAngleYManual: false
   });
   applyCoverParticleResolution(fx.coverResolution, { reload: true });
   updateFxInputs();
   applyDesktopLyricsState(true);
   applyWallpaperModeState(true);
+  updateRenderPowerClasses();
+  applyRendererPowerMode();
   setStageLyricPalette(stageLyrics.coverPalette || stageLyrics.palette);
   setPreset(fx.preset, { silent: true, preserveCamera: true, skipTransition: true });
   if (fx.floatLayer) createFloatLayer(); else destroyFloatLayer();
+  if (shelfManager && shelfManager.rebuild) shelfManager.rebuild(true);
+  if (shelfManager && shelfManager.refreshTheme) shelfManager.refreshTheme();
   saveLyricLayout();
   showToast('已恢复默认参数');
 }
@@ -21818,6 +22501,8 @@ function refreshShelfVisuals(reason) {
 }
 function setShelfCameraMode(mode) {
   fx.shelfCameraMode = normalizeShelfCameraMode(mode);
+  applyShelfCameraDefaultAngle(true);
+  setRange('fx-shelfangle', fx.shelfAngleY);
   updateShelfControlUi();
   if (fx.shelfCameraMode === 'static' && orbit && orbit.focus && /^shelf-/.test(String(orbit.focus.type || ''))) {
     setFocusZone(null, true);
@@ -23858,6 +24543,7 @@ function startVisualGuide(opts) {
   closeMiniQueue();
   closeUploadTip(false);
   visualGuideActive = true;
+  document.body.classList.add('visual-guide-active');
   visualGuideStep = 0;
   visualGuideState = {
     bottomWasVisible: !!(document.getElementById('bottom-bar') && document.getElementById('bottom-bar').classList.contains('visible')),
@@ -23955,11 +24641,12 @@ function guideTargetRect(step) {
     }
   }
   var isFullscreenDiyStep = !!(step && step.selector === '#diy-mode-btn' && (desktopRuntimeState.fullscreen || desktopFullscreenActive || document.fullscreenElement || document.body.classList.contains('desktop-fullscreen')));
-  if (isFullscreenDiyStep) {
+  var useFullscreenDiyTarget = isFullscreenDiyStep && !shouldSuppressFullscreenDiyPeek();
+  if (useFullscreenDiyTarget) {
     layoutFullscreenDiyZone();
     document.body.classList.add('fullscreen-diy-peek');
   }
-  var target = step && step.selector ? document.querySelector(isFullscreenDiyStep ? '#fullscreen-diy-btn' : step.selector) : null;
+  var target = step && step.selector ? document.querySelector(useFullscreenDiyTarget ? '#fullscreen-diy-btn' : step.selector) : null;
   if (target) {
     var style = window.getComputedStyle(target);
     var rect = target.getBoundingClientRect();
@@ -24022,6 +24709,7 @@ function closeVisualGuide(markSeen) {
     guide.classList.remove('show');
     guide.setAttribute('aria-hidden', 'true');
   }
+  document.body.classList.remove('visual-guide-active');
   document.body.classList.remove('fullscreen-diy-peek');
   var search = document.getElementById('search-area');
   var bottom = document.getElementById('bottom-bar');
@@ -24557,6 +25245,7 @@ function setPeek(el, on, key) {
   if (on && !diyPlayerMode && key === 'fx') return;
   if (!on && key === 'search' && emptyHomeActive && !immersiveMode) return;
   if (!on && key === 'pl' && playlistPanelPinned) return;
+  if (on && key === 'fx') document.body.classList.remove('fullscreen-diy-peek');
   if (on) {
     var wasPeek = el.classList.contains('peek');
     if (peekTimers[key]) { clearTimeout(peekTimers[key]); peekTimers[key] = null; }
@@ -24745,11 +25434,13 @@ window.addEventListener('mousemove', function(e){
   updateFullscreenDiyPeekFromPointer(ex, ey);
   if (document.body.classList.contains('splash-active')) {
     updateShelfHoverCueFromPointer(null);
+    updateShelfCardHoverSelection(null);
     setFocusZone(null);
     return;
   }
   if (immersiveMode) {
     updateShelfHoverCueFromPointer(e);
+    updateShelfCardHoverSelection(e);
     updateControlsAutoHideFromPointer(ex, ey);
     var ppOnImm = pp.classList.contains('peek');
     var ppRectImm = pp.getBoundingClientRect();
@@ -24760,7 +25451,7 @@ window.addEventListener('mousemove', function(e){
     var shelfCanFocusImm = !!(shelfManager && shelfManager.canInteract && shelfManager.canInteract());
     var newFocusImm = null;
     var queueFocusImm = isPlaylistPanelFocusActive(inQueueTriggerImm, inQueuePanelImm, pp, ex, ppRectImm);
-    var shelfHoverFocusImm = !!(shelfCanFocusImm && shelfManager && shelfManager.getMode && shelfManager.getMode() === 'side' && (shelfPinnedOpen || shelfAlwaysVisible() || (shelfVisibility > 0.34 && isShelfPreviewUseZone(e))));
+    var shelfHoverFocusImm = !!(shelfCanFocusImm && isSideShelfFocusHit(e));
     if (queueFocusImm) newFocusImm = 'queue';
     else if (shelfManager && shelfManager.hasOpenContent && shelfManager.hasOpenContent()) newFocusImm = 'shelf-detail';
     else if (shelfHoverFocusImm) newFocusImm = 'shelf-side';
@@ -24769,6 +25460,7 @@ window.addEventListener('mousemove', function(e){
     return;
   }
   updateShelfHoverCueFromPointer(e);
+  updateShelfCardHoverSelection(e);
   // 搜索 (上): 顶部 48px 内进入; 已显示时鼠标在 280px 内保留
   var saOn = sa.classList.contains('peek');
   var saRect = sa.getBoundingClientRect();
@@ -24808,7 +25500,7 @@ window.addEventListener('mousemove', function(e){
 
   var newFocus = null;
   var queueFocusActive = isPlaylistPanelFocusActive(inQueueTrigger, inQueuePanel, pp, ex, ppRect);
-  var shelfHoverFocus = !!(shelfCanFocus && shelfManager && shelfManager.getMode && shelfManager.getMode() === 'side' && (shelfPinnedOpen || shelfAlwaysVisible() || (shelfVisibility > 0.34 && isShelfPreviewUseZone(e))));
+  var shelfHoverFocus = !!(shelfCanFocus && isSideShelfFocusHit(e));
   if (queueFocusActive) {
     newFocus = 'queue';
   } else if (shelfManager && shelfManager.hasOpenContent && shelfManager.hasOpenContent()) {
