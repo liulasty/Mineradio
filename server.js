@@ -3314,6 +3314,61 @@ function parseMusicMeta(meta) {
     picture: picture ? { data: Buffer.from(picture.data), format: picture.format || 'image/jpeg' } : null,
   };
 }
+function cleanName(n) {
+  return n.replace(/[（(【\[].*?[）)】\]]/g, '').replace(/\s*(live|cover|伴奏|重制|remake|remix|instrumental|片段|完整版|热播版|加长版|钢琴版|吉他版|弹唱版|女声版|男声版|抖音版|原唱)\s*/gi, '').replace(/[＿\-_－·\s]+/g, ' ').trim().toLowerCase();
+}
+function scoreLrcMatch(lrcName, titleClean, artistClean, rawParts) {
+  let score = 0;
+  if (!lrcName || !titleClean) return 0;
+  // 标题短于3字时须有歌手配合
+  const shortTitle = titleClean.length < 3;
+  // 完整标题命中
+  if (lrcName.includes(titleClean)) score += shortTitle ? 30 : 50;
+  // 歌手同时命中
+  if (artistClean && lrcName.includes(artistClean)) score += 30;
+  // 各片段命中
+  for (const rp of rawParts) {
+    if (rp.length > 1 && lrcName.includes(rp)) score += 5;
+  }
+  // 长度接近加分
+  const lenRatio = lrcName.length / Math.max(titleClean.length, 1);
+  if (lenRatio >= 0.6 && lenRatio <= 2.5) score += 5;
+  return score;
+}
+function findLocalLyric(audioFull, audioTitle, audioArtist) {
+  // 1. 优先严格同名匹配
+  const exact = audioFull.replace(/\.[^.]+$/, '') + '.lrc';
+  if (fs.existsSync(exact)) return exact;
+  const dir = path.dirname(audioFull);
+  const base = path.basename(audioFull).replace(/\.[^.]+$/, '');
+  const cleanBase = cleanName(base);
+  // 列出同级目录所有 lrc
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return ''; }
+  const lrcFiles = entries.filter(e => e.isFile() && e.name.toLowerCase().endsWith('.lrc')).map(e => path.join(dir, e.name));
+  if (!lrcFiles.length) return '';
+  // 2. 清理后精确匹配
+  for (const lf of lrcFiles) {
+    const lb = path.basename(lf).replace(/\.lrc$/i, '');
+    if (cleanBase === cleanName(lb)) return lf;
+  }
+  // 3. 评分制匹配
+  const rawTitle = audioTitle || cleanBase.replace(/\s*[-–—]\s*.*$/, '');
+  const titleClean = cleanName(rawTitle);
+  const artistClean = cleanName(audioArtist || '');
+  // 标题太短(<2字)且无歌手信息 → 放弃（免误配）
+  if (titleClean.length < 2 && !artistClean) return '';
+  const rawParts = rawTitle.split(/\s*[-–—]\s*/).filter(Boolean);
+  let bestScore = 0, bestLrc = '';
+  for (const lf of lrcFiles) {
+    const lb = cleanName(path.basename(lf).replace(/\.lrc$/i, ''));
+    const s = scoreLrcMatch(lb, titleClean, artistClean, rawParts);
+    if (s > bestScore) { bestScore = s; bestLrc = lf; }
+  }
+  const minScore = titleClean.length < 3 ? 60 : 50;
+  if (bestLrc && bestScore >= minScore) return bestLrc;
+  return '';
+}
 function serveStaticWithCache(res, filePath, contentType) {
   try {
     const data = fs.readFileSync(filePath);
@@ -4326,14 +4381,15 @@ const server = http.createServer(async (req, res) => {
                   try { fs.writeFileSync(path.join(LOCAL_COVERS_DIR, coverPath), tag.picture.data); hasCover = true; }
                   catch (e3) { console.warn("[LocalMusicScan] cover write failed for", full, e3.message); coverPath = ""; }
                 }
-                const lrcPath = normalizePath(full.replace(/.[^.]+$/, "") + ".lrc");
-                const hasLyric = fs.existsSync(lrcPath);
+                const lrcPath = findLocalLyric(full, tag.title, tag.artist);
+                const hasLyric = !!lrcPath;
                 newFiles.push({ id, filePath: key, fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) }, meta: { title: tag.title || path.basename(full, ext), artist: tag.artist || "", album: tag.album || "", duration: tag.duration || 0 }, hasCover, coverPath, hasLyric, lyricFilePath: hasLyric ? lrcPath : "", liked: (old && old.liked) || false, playCount: (old && old.playCount) || 0, addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000) });
               } catch (e2) {
                 console.warn("[LocalMusicScan] parse failed for", full, e2.message);
                 localScanJob.errors++;
                 const id2 = (old && old.id) || uuidv4();
-                newFiles.push({ id: id2, filePath: key, fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) }, meta: { title: path.basename(full, ext), artist: "", album: "", duration: 0 }, hasCover: false, coverPath: "", hasLyric: false, lyricFilePath: "", liked: (old && old.liked) || false, playCount: (old && old.playCount) || 0, addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000) });
+                const fbLrcPath = findLocalLyric(full, path.basename(full, ext), "");
+                newFiles.push({ id: id2, filePath: key, fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) }, meta: { title: path.basename(full, ext), artist: "", album: "", duration: 0 }, hasCover: false, coverPath: "", hasLyric: !!fbLrcPath, lyricFilePath: fbLrcPath || "", liked: (old && old.liked) || false, playCount: (old && old.playCount) || 0, addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000) });
               }
               localScanJob.current++;
             }
