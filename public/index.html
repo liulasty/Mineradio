@@ -1874,8 +1874,12 @@ html.control-glass-svg-ok #visual-guide-btn:hover{
 .lm-item-duration{font-size:12px;color:var(--fc-muted);flex:0 0 auto}
 .lm-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--fc-muted);font-size:14px}
 .lm-empty-icon{font-size:48px;opacity:.3}
-.lm-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--fc-muted);font-size:14px}
+.lm-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--fc-muted);font-size:14px}
 .lm-loading .spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.12);border-top-color:var(--fc-accent);border-radius:50%;animation:spin .7s linear infinite}
+.lm-progress-wrap{width:100%;max-width:320px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.lm-progress-bar{width:0;height:100%;background:var(--fc-accent);border-radius:2px;transition:width .3s}
+.lm-progress-text{font-size:12px;color:var(--fc-muted)}
+.lm-progress-file{font-size:11px;color:var(--fc-muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -16114,6 +16118,8 @@ function closeLocalMusicPage() {
   var ov = document.getElementById('local-music-overlay');
   if (ov) ov.classList.remove('show');
   document.body.classList.remove('local-music-open');
+  // 清理扫描轮询定时器
+  if (localScanPoll) { clearInterval(localScanPoll); localScanPoll = null; }
 }
 async function selectMusicDir() {
   try {
@@ -16140,21 +16146,52 @@ async function selectMusicDir() {
     }
   } catch (e) { console.warn('[LocalMusicDir]', e); showToast('目录选择失败: ' + e.message); }
 }
+var localScanPoll = null;
 async function scanLocalMusic() {
   var list = document.getElementById('lm-list');
-  if (list) list.innerHTML = '<div class="lm-loading"><div class="spin"></div>扫描中…</div>';
+  if (!list) return;
+  var scanBtn = document.getElementById('lm-scan-btn');
+  // 防止重复点击
+  try { var sr = await fetch('/api/local-music/scan/status'); var sj = await sr.json(); if (sj && sj.running) { showToast('正在扫描，请稍候'); return; } } catch (e) {}
+  if (scanBtn) scanBtn.disabled = true;
   try {
     var resp = await fetch('/api/local-music/scan', { method: 'POST' });
     var data = await resp.json();
-    if (data.ok) {
-      loadLocalMusicIndex();
-    } else {
-      if (list) list.innerHTML = '<div class="lm-empty"><span>扫描失败: ' + escHtml(data.message || '') + '</span></div>';
+    if (data.status !== 'started') {
+      list.innerHTML = '<div class="lm-empty"><span>扫描失败: ' + escHtml(data.message || '') + '</span></div>';
+      if (scanBtn) scanBtn.disabled = false;
+      return;
     }
   } catch (e) {
     console.warn('[LocalMusicScan]', e);
-    if (list) list.innerHTML = '<div class="lm-empty"><span>扫描失败: ' + escHtml(e.message) + '</span></div>';
+    list.innerHTML = '<div class="lm-empty"><span>扫描失败: ' + escHtml(e.message) + '</span></div>';
+    if (scanBtn) scanBtn.disabled = false;
+    return;
   }
+  list.innerHTML = [
+    '<div class="lm-loading">',
+    '<div class="lm-progress-wrap"><div class="lm-progress-bar" id="lm-progress-bar"></div></div>',
+    '<div class="lm-progress-text" id="lm-progress-text">扫描中 0/0</div>',
+    '<div class="lm-progress-file" id="lm-progress-file"></div>',
+    '</div>',
+  ].join('');
+  localScanPoll = setInterval(async function() {
+    try {
+      var r = await fetch('/api/local-music/scan/status');
+      var st = await r.json();
+      var bar = document.getElementById('lm-progress-bar');
+      var txt = document.getElementById('lm-progress-text');
+      var fname = document.getElementById('lm-progress-file');
+      if (st.total > 0 && bar) bar.style.width = Math.min(100, Math.round(st.current / st.total * 100)) + '%';
+      if (txt) txt.textContent = '扫描中 ' + st.current + '/' + st.total + (st.errors ? ' (' + st.errors + ' 错误)' : '');
+      if (fname && st.currentFile) fname.textContent = st.currentFile.replace(/^.*[/\\]/, '');
+      if (st.complete) {
+        clearInterval(localScanPoll); localScanPoll = null;
+        if (scanBtn) scanBtn.disabled = false;
+        loadLocalMusicIndex();
+      }
+    } catch (e) { clearInterval(localScanPoll); localScanPoll = null; if (scanBtn) scanBtn.disabled = false; loadLocalMusicIndex(); }
+  }, 400);
 }
 async function loadLocalMusicIndex() {
   try {

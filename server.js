@@ -3252,6 +3252,7 @@ async function getLoginInfo() {
 // ====================================================================
 // ---------- 本地曲库工具函数 ----------
 let localMusicIndexCache = null;
+let localScanJob = null; // { running, total, current, currentFile, errors, complete, newTotal }
 function normalizePath(p) {
   let resolved = path.resolve(p);
   if (process.platform === 'win32') {
@@ -4287,99 +4288,79 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // POST /api/local-music/scan — 增量扫描
-  if (pn === '/api/local-music/scan' && req.method === 'POST') {
-    try {
-      const index = loadLocalMusicIndex();
-      if (!index.musicDir || !fs.existsSync(index.musicDir)) {
-        sendJSON(res, { ok: false, error: 'NO_MUSIC_DIR', message: '请先设置音乐目录' }, 400); return;
-      }
-      ensureCoversDir();
-      const oldMap = new Map();
-      (index.files || []).forEach(e => { if (e && e.filePath) oldMap.set(normalizePath(e.filePath), e); });
-      const newFiles = [];
-
-      async function walk(dir) {
-        let entries;
-        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
-        for (const entry of entries) {
-          const full = path.join(dir, entry.name);
-          if (entry.isDirectory()) { await walk(full); }
-          else if (entry.isFile()) {
-            const ext = path.extname(entry.name).toLowerCase();
-            if (!SUPPORTED_AUDIO_EXT.has(ext)) continue;
-            const key = normalizePath(full);
-            let stat; try { stat = fs.statSync(full); } catch (e) { continue; }
-            const old = oldMap.get(key);
-            if (old && old.fileStat && old.fileStat.size === stat.size && old.fileStat.mtime === Math.floor(stat.mtimeMs / 1000)) {
-              newFiles.push({ ...old }); continue;
-            }
-            try {
-              const meta = await mm.parseFile(full, { duration: true, skipCovers: false });
-              const tag = parseMusicMeta(meta);
-              const id = (old && old.id) || uuidv4();
-              let hasCover = false, coverPath = '';
-              if (tag.picture) {
-                const ext2 = tag.picture.format === 'image/png' ? '.png' : '.jpg';
-                coverPath = id + ext2;
-                try {
-                  fs.writeFileSync(path.join(LOCAL_COVERS_DIR, coverPath), tag.picture.data);
-                  hasCover = true;
-                } catch (e3) {
-                  console.warn('[LocalMusicScan] cover write failed for', full, e3.message);
-                  coverPath = '';
+    // POST /api/local-music/scan — 增量扫描（后台异步）
+  if (pn === "/api/local-music/scan" && req.method === "POST") {
+    const idx = loadLocalMusicIndex();
+    if (!idx.musicDir || !fs.existsSync(idx.musicDir)) { sendJSON(res, { ok: false, error: "NO_MUSIC_DIR", message: "请先设置音乐目录" }, 400); return; }
+    if (localScanJob && localScanJob.running) { sendJSON(res, { ok: false, error: "SCAN_IN_PROGRESS", message: "扫描正在进行中" }, 409); return; }
+    ensureCoversDir();
+    localScanJob = { running: true, total: 0, current: 0, currentFile: "", errors: 0, complete: false, newTotal: 0 };
+    const runScan = async () => {
+      try {
+        const i = loadLocalMusicIndex();
+        const oldMap = new Map(); i.files.forEach(e => { if (e && e.filePath) oldMap.set(normalizePath(e.filePath), e); });
+        const newFiles = []; let totalFiles = 0;
+        const countDir = d => { let e; try { e = fs.readdirSync(d, { withFileTypes: true }); } catch (x) { return; } e.forEach(en => { if (en.isDirectory()) countDir(path.join(d, en.name)); else if (SUPPORTED_AUDIO_EXT.has(path.extname(en.name).toLowerCase())) totalFiles++; }); };
+        countDir(i.musicDir); localScanJob.total = totalFiles;
+        const walk = async dir => {
+          let entries; try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+          for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) { await walk(full); }
+            else if (entry.isFile()) {
+              const ext = path.extname(entry.name).toLowerCase();
+              if (!SUPPORTED_AUDIO_EXT.has(ext)) continue;
+              localScanJob.currentFile = full;
+              const key = normalizePath(full);
+              let stat; try { stat = fs.statSync(full); } catch (e) { localScanJob.current++; continue; }
+              const old = oldMap.get(key);
+              if (old && old.fileStat && old.fileStat.size === stat.size && old.fileStat.mtime === Math.floor(stat.mtimeMs / 1000)) { newFiles.push({ ...old }); localScanJob.current++; continue; }
+              try {
+                const meta = await mm.parseFile(full, { duration: true, skipCovers: false });
+                const tag = parseMusicMeta(meta);
+                const id = (old && old.id) || uuidv4();
+                let hasCover = false, coverPath = "";
+                if (tag.picture) {
+                  const ext2 = tag.picture.format === "image/png" ? ".png" : ".jpg";
+                  coverPath = id + ext2;
+                  try { fs.writeFileSync(path.join(LOCAL_COVERS_DIR, coverPath), tag.picture.data); hasCover = true; }
+                  catch (e3) { console.warn("[LocalMusicScan] cover write failed for", full, e3.message); coverPath = ""; }
                 }
+                const lrcPath = normalizePath(full.replace(/.[^.]+$/, "") + ".lrc");
+                const hasLyric = fs.existsSync(lrcPath);
+                newFiles.push({ id, filePath: key, fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) }, meta: { title: tag.title || path.basename(full, ext), artist: tag.artist || "", album: tag.album || "", duration: tag.duration || 0 }, hasCover, coverPath, hasLyric, lyricFilePath: hasLyric ? lrcPath : "", liked: (old && old.liked) || false, playCount: (old && old.playCount) || 0, addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000) });
+              } catch (e2) {
+                console.warn("[LocalMusicScan] parse failed for", full, e2.message);
+                localScanJob.errors++;
+                const id2 = (old && old.id) || uuidv4();
+                newFiles.push({ id: id2, filePath: key, fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) }, meta: { title: path.basename(full, ext), artist: "", album: "", duration: 0 }, hasCover: false, coverPath: "", hasLyric: false, lyricFilePath: "", liked: (old && old.liked) || false, playCount: (old && old.playCount) || 0, addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000) });
               }
-              const lrcPath = normalizePath(full.replace(/\.[^.]+$/, '') + '.lrc');
-              const hasLyric = fs.existsSync(lrcPath);
-              newFiles.push({
-                id,
-                filePath: key,
-                fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) },
-                meta: { title: tag.title || path.basename(full, ext), artist: tag.artist || '', album: tag.album || '', duration: tag.duration || 0 },
-                hasCover, coverPath,
-                hasLyric, lyricFilePath: hasLyric ? lrcPath : '',
-                liked: (old && old.liked) || false,
-                playCount: (old && old.playCount) || 0,
-                addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000),
-              });
-            } catch (e2) {
-              console.warn('[LocalMusicScan] parse failed for', full, e2.message);
-              // 损坏文件记录 fallback 条目，避免每次扫描都重试解析
-              const id = (old && old.id) || uuidv4();
-              newFiles.push({
-                id,
-                filePath: key,
-                fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) },
-                meta: { title: path.basename(full, ext), artist: '', album: '', duration: 0 },
-                hasCover: false, coverPath: '',
-                hasLyric: false, lyricFilePath: '',
-                liked: (old && old.liked) || false,
-                playCount: (old && old.playCount) || 0,
-                addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000),
-              });
+              localScanJob.current++;
             }
           }
-        }
-      }
-      await walk(index.musicDir);
-
-      // 清理已删除文件的封面（垃圾回收）
-      const newIds = new Set(newFiles.map(f => f.id));
-      for (const old of (index.files || [])) {
-        if (old && old.id && !newIds.has(old.id) && old.coverPath) {
-          try { fs.unlinkSync(path.join(LOCAL_COVERS_DIR, old.coverPath)); } catch (e) {}
-        }
-      }
-
-      index.files = newFiles;
-      saveLocalMusicIndex(index);
-      sendJSON(res, { ok: true, total: newFiles.length, dir: index.musicDir });
-    } catch (err) { console.error('[LocalMusicScan]', err); sendJSON(res, { ok: false, error: err.message }, 500); }
+        };
+        await walk(i.musicDir);
+        const newIds = new Set(newFiles.map(f => f.id));
+        for (const oldEntry of (i.files || [])) { if (oldEntry && oldEntry.id && !newIds.has(oldEntry.id) && oldEntry.coverPath) try { fs.unlinkSync(path.join(LOCAL_COVERS_DIR, oldEntry.coverPath)); } catch (e) {} }
+        i.files = newFiles; saveLocalMusicIndex(i);
+        localScanJob.newTotal = newFiles.length; localScanJob.complete = true;
+      } catch (err) { console.error("[LocalMusicScan]", err); localScanJob.errors++; }
+      finally { localScanJob.running = false; }
+    };
+    runScan();
+    sendJSON(res, { ok: true, status: "started", total: localScanJob.total });
     return;
   }
 
-  // GET /api/local-music/list — 全量索引
+  // GET /api/local-music/scan/status — 扫描进度
+  if (pn === "/api/local-music/scan/status" && req.method === "GET") {
+    const job = localScanJob;
+    if (!job) { sendJSON(res, { running: false, complete: false }); return; }
+    sendJSON(res, { running: job.running, complete: job.complete, total: job.total, current: job.current, currentFile: job.currentFile || "", errors: job.errors, newTotal: job.complete ? job.newTotal : 0 });
+    return;
+  }
+
+  // GET /api/local-music/list// GET /api/local-music/list — 全量索引
   if (pn === '/api/local-music/list' && req.method === 'GET') {
     const index = loadLocalMusicIndex();
     sendJSON(res, { ok: true, dir: index.musicDir, files: index.files || [] });
