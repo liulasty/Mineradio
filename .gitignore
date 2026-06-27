@@ -38,6 +38,13 @@ yarn-error.log*
 public/index.*.html
 !public/index.html
 
+# Local music runtime data
+local-covers/
+local-music.index.json
+
+# IDE
+.idea/
+
 # Screenshots and transient verification artifacts
 .playwright-cli/
 output/

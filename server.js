@@ -53,6 +53,8 @@ const tls = require('tls');
 const { once } = require('events');
 const { fileURLToPath } = require('url');
 const { analyzePodcastDjStream, analyzePodcastDjIntro } = require('./dj-analyzer');
+const { v4: uuidv4 } = require('uuid');
+const mm = require('music-metadata');
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -63,6 +65,14 @@ const UPDATE_WORK_DIR = process.env.MINERADIO_UPDATE_DIR || path.join(__dirname,
 const UPDATE_DOWNLOAD_DIR = process.env.MINERADIO_UPDATE_DOWNLOAD_DIR || path.join(UPDATE_WORK_DIR, 'downloads');
 const UPDATE_PATCH_BACKUP_DIR = process.env.MINERADIO_PATCH_BACKUP_DIR || path.join(UPDATE_WORK_DIR, 'backups', 'patches');
 const BEATMAP_CACHE_DIR = process.env.MINERADIO_BEAT_CACHE_DIR || 'D:\\MineradioCache\\beatmaps';
+const LOCAL_MUSIC_INDEX = process.env.LOCAL_MUSIC_INDEX || path.join(__dirname, 'local-music.index.json');
+const LOCAL_COVERS_DIR = process.env.LOCAL_COVERS_DIR || path.join(__dirname, 'local-covers');
+const SUPPORTED_AUDIO_EXT = new Set(['.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.wma', '.ape']);
+const LOCAL_MIME_MAP = {
+  '.mp3': 'audio/mpeg', '.flac': 'audio/flac', '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg', '.m4a': 'audio/mp4', '.aac': 'audio/aac',
+  '.wma': 'audio/x-ms-wma', '.ape': 'audio/ape',
+};
 const APP_PACKAGE = readPackageInfo();
 const APP_VERSION = process.env.MINERADIO_VERSION || APP_PACKAGE.version || '0.9.11';
 const UPDATE_CONFIG = readUpdateConfig(APP_PACKAGE);
@@ -3240,6 +3250,80 @@ async function getLoginInfo() {
 // ====================================================================
 //  HTTP Server
 // ====================================================================
+// ---------- 本地曲库工具函数 ----------
+let localMusicIndexCache = null;
+function normalizePath(p) {
+  let resolved = path.resolve(p);
+  if (process.platform === 'win32') {
+    resolved = resolved.charAt(0).toUpperCase() + resolved.slice(1);
+    resolved = resolved.replace(/\//g, '\\');
+  }
+  return resolved;
+}
+function loadLocalMusicIndex() {
+  if (localMusicIndexCache && localMusicIndexCache._loaded) return localMusicIndexCache;
+  try {
+    const raw = fs.readFileSync(LOCAL_MUSIC_INDEX, 'utf8');
+    localMusicIndexCache = JSON.parse(raw);
+    if (!localMusicIndexCache || typeof localMusicIndexCache.version !== 'number') {
+      localMusicIndexCache = { version: 1, musicDir: '', files: [] };
+    }
+    // Normalize stored paths
+    if (localMusicIndexCache.musicDir) localMusicIndexCache.musicDir = normalizePath(localMusicIndexCache.musicDir);
+    (localMusicIndexCache.files || []).forEach(f => {
+      if (f.filePath) f.filePath = normalizePath(f.filePath);
+      if (f.lyricFilePath) f.lyricFilePath = normalizePath(f.lyricFilePath);
+    });
+  } catch (e) {
+    localMusicIndexCache = { version: 1, musicDir: '', files: [] };
+  }
+  localMusicIndexCache._loaded = true;
+  return localMusicIndexCache;
+}
+function saveLocalMusicIndex(data) {
+  localMusicIndexCache = data;
+  delete localMusicIndexCache._loaded;
+  const tmp = LOCAL_MUSIC_INDEX + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(localMusicIndexCache, null, 2), 'utf8');
+  fs.renameSync(tmp, LOCAL_MUSIC_INDEX);
+  localMusicIndexCache._loaded = true;
+}
+function ensureCoversDir() {
+  if (!fs.existsSync(LOCAL_COVERS_DIR)) fs.mkdirSync(LOCAL_COVERS_DIR, { recursive: true });
+}
+function isPathSafe(filePath, baseDir) {
+  if (!filePath || !baseDir) return false;
+  const resolved = normalizePath(filePath);
+  const base = normalizePath(baseDir);
+  return resolved.startsWith(base + '\\') || resolved.startsWith(base + '/') || resolved === base;
+}
+function extToMime(ext) {
+  return LOCAL_MIME_MAP[(ext || '').toLowerCase()] || 'audio/mpeg';
+}
+function parseMusicMeta(meta) {
+  const common = (meta && meta.common) || {};
+  const format = (meta && meta.format) || {};
+  let picture = null;
+  if (common.picture && common.picture.length) picture = common.picture[0];
+  return {
+    title: String(common.title || '').trim(),
+    artist: String(common.artist || common.artists || '').trim(),
+    album: String(common.album || '').trim(),
+    duration: Number(format.duration) || 0,
+    picture: picture ? { data: Buffer.from(picture.data), format: picture.format || 'image/jpeg' } : null,
+  };
+}
+function serveStaticWithCache(res, filePath, contentType) {
+  try {
+    const data = fs.readFileSync(filePath);
+    res.writeHead(200, { 'Content-Type': contentType || 'image/jpeg', 'Cache-Control': 'public, max-age=86400', 'Content-Length': data.length });
+    res.end(data);
+  } catch (e) { res.writeHead(404); res.end('Not found'); }
+}
+// 启动时初始化
+loadLocalMusicIndex();
+ensureCoversDir();
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost:' + PORT);
   const pn = url.pathname;
@@ -4179,6 +4263,212 @@ const server = http.createServer(async (req, res) => {
       while (true) { const c = await reader.read(); if (c.done) break; res.write(c.value); }
       res.end();
     } catch (err) { console.error('[Audio]', err); res.writeHead(500); res.end(); }
+    return;
+  }
+
+  // ====================================================================
+  //  本地曲库 API
+  // ====================================================================
+
+  // POST /api/local-music/dir — 设置音乐目录
+  if (pn === '/api/local-music/dir' && req.method === 'POST') {
+    try {
+      const body = await readRequestBody(req);
+      const dir = String(body.dir || '').trim();
+      if (!dir) { sendJSON(res, { ok: false, error: 'INVALID_DIR', message: '目录不可为空' }, 400); return; }
+      if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+        sendJSON(res, { ok: false, error: 'INVALID_DIR', message: '目录不存在或不可访问' }, 400); return;
+      }
+      const index = loadLocalMusicIndex();
+      index.musicDir = normalizePath(dir);
+      saveLocalMusicIndex(index);
+      sendJSON(res, { ok: true, dir: index.musicDir });
+    } catch (err) { console.error('[LocalMusicDir]', err); sendJSON(res, { ok: false, error: err.message }, 500); }
+    return;
+  }
+
+  // POST /api/local-music/scan — 增量扫描
+  if (pn === '/api/local-music/scan' && req.method === 'POST') {
+    try {
+      const index = loadLocalMusicIndex();
+      if (!index.musicDir || !fs.existsSync(index.musicDir)) {
+        sendJSON(res, { ok: false, error: 'NO_MUSIC_DIR', message: '请先设置音乐目录' }, 400); return;
+      }
+      ensureCoversDir();
+      const oldMap = new Map();
+      (index.files || []).forEach(e => { if (e && e.filePath) oldMap.set(normalizePath(e.filePath), e); });
+      const newFiles = [];
+
+      async function walk(dir) {
+        let entries;
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+        for (const entry of entries) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) { await walk(full); }
+          else if (entry.isFile()) {
+            const ext = path.extname(entry.name).toLowerCase();
+            if (!SUPPORTED_AUDIO_EXT.has(ext)) continue;
+            const key = normalizePath(full);
+            let stat; try { stat = fs.statSync(full); } catch (e) { continue; }
+            const old = oldMap.get(key);
+            if (old && old.fileStat && old.fileStat.size === stat.size && old.fileStat.mtime === Math.floor(stat.mtimeMs / 1000)) {
+              newFiles.push({ ...old }); continue;
+            }
+            try {
+              const meta = await mm.parseFile(full, { duration: true, skipCovers: false });
+              const tag = parseMusicMeta(meta);
+              const id = (old && old.id) || uuidv4();
+              let hasCover = false, coverPath = '';
+              if (tag.picture) {
+                const ext2 = tag.picture.format === 'image/png' ? '.png' : '.jpg';
+                coverPath = id + ext2;
+                try {
+                  fs.writeFileSync(path.join(LOCAL_COVERS_DIR, coverPath), tag.picture.data);
+                  hasCover = true;
+                } catch (e3) {
+                  console.warn('[LocalMusicScan] cover write failed for', full, e3.message);
+                  coverPath = '';
+                }
+              }
+              const lrcPath = normalizePath(full.replace(/\.[^.]+$/, '') + '.lrc');
+              const hasLyric = fs.existsSync(lrcPath);
+              newFiles.push({
+                id,
+                filePath: key,
+                fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) },
+                meta: { title: tag.title || path.basename(full, ext), artist: tag.artist || '', album: tag.album || '', duration: tag.duration || 0 },
+                hasCover, coverPath,
+                hasLyric, lyricFilePath: hasLyric ? lrcPath : '',
+                liked: (old && old.liked) || false,
+                playCount: (old && old.playCount) || 0,
+                addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000),
+              });
+            } catch (e2) {
+              console.warn('[LocalMusicScan] parse failed for', full, e2.message);
+              // 损坏文件记录 fallback 条目，避免每次扫描都重试解析
+              const id = (old && old.id) || uuidv4();
+              newFiles.push({
+                id,
+                filePath: key,
+                fileStat: { size: stat.size, mtime: Math.floor(stat.mtimeMs / 1000) },
+                meta: { title: path.basename(full, ext), artist: '', album: '', duration: 0 },
+                hasCover: false, coverPath: '',
+                hasLyric: false, lyricFilePath: '',
+                liked: (old && old.liked) || false,
+                playCount: (old && old.playCount) || 0,
+                addedAt: (old && old.addedAt) || Math.floor(Date.now() / 1000),
+              });
+            }
+          }
+        }
+      }
+      await walk(index.musicDir);
+
+      // 清理已删除文件的封面（垃圾回收）
+      const newIds = new Set(newFiles.map(f => f.id));
+      for (const old of (index.files || [])) {
+        if (old && old.id && !newIds.has(old.id) && old.coverPath) {
+          try { fs.unlinkSync(path.join(LOCAL_COVERS_DIR, old.coverPath)); } catch (e) {}
+        }
+      }
+
+      index.files = newFiles;
+      saveLocalMusicIndex(index);
+      sendJSON(res, { ok: true, total: newFiles.length, dir: index.musicDir });
+    } catch (err) { console.error('[LocalMusicScan]', err); sendJSON(res, { ok: false, error: err.message }, 500); }
+    return;
+  }
+
+  // GET /api/local-music/list — 全量索引
+  if (pn === '/api/local-music/list' && req.method === 'GET') {
+    const index = loadLocalMusicIndex();
+    sendJSON(res, { ok: true, dir: index.musicDir, files: index.files || [] });
+    return;
+  }
+
+  // GET /api/local-music/:id/stream — 流式音频
+  if (pn.startsWith('/api/local-music/') && pn.endsWith('/stream') && req.method === 'GET') {
+    try {
+      const id = pn.slice('/api/local-music/'.length, -'/stream'.length);
+      const index = loadLocalMusicIndex();
+      const entry = (index.files || []).find(f => f && f.id === id);
+      if (!entry) { res.writeHead(404); res.end('Song not found in index'); return; }
+      if (!isPathSafe(entry.filePath, index.musicDir)) { res.writeHead(403); res.end('Forbidden'); return; }
+      if (!fs.existsSync(entry.filePath)) { res.writeHead(404); res.end('File missing on disk'); return; }
+      const stat = fs.statSync(entry.filePath);
+      const ext = path.extname(entry.filePath).toLowerCase();
+      const mime = extToMime(ext);
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10) || 0;
+        const end = parts[1] ? parseInt(parts[1], 10) : (stat.size - 1);
+        const chunkSize = end - start + 1;
+        res.writeHead(206, {
+          'Content-Type': mime, 'Content-Range': 'bytes ' + start + '-' + end + '/' + stat.size,
+          'Content-Length': chunkSize, 'Accept-Ranges': 'bytes',
+        });
+        const stream = fs.createReadStream(entry.filePath, { start, end });
+        stream.pipe(res);
+      } else {
+        res.writeHead(200, { 'Content-Type': mime, 'Content-Length': stat.size, 'Accept-Ranges': 'bytes' });
+        fs.createReadStream(entry.filePath).pipe(res);
+      }
+    } catch (err) { console.error('[LocalMusicStream]', err); res.writeHead(500); res.end(); }
+    return;
+  }
+
+  // GET /api/local-music/:id/cover — 封面图片
+  if (pn.startsWith('/api/local-music/') && pn.endsWith('/cover') && req.method === 'GET') {
+    try {
+      const id = pn.slice('/api/local-music/'.length, -'/cover'.length);
+      const index = loadLocalMusicIndex();
+      const entry = (index.files || []).find(f => f && f.id === id);
+      if (!entry || !entry.hasCover || !entry.coverPath) { res.writeHead(404); res.end('No cover'); return; }
+      // 防止路径穿越
+      if (entry.coverPath.includes('/') || entry.coverPath.includes('\\') || entry.coverPath.includes('..')) {
+        res.writeHead(403); res.end('Forbidden'); return;
+      }
+      const coverFull = path.join(LOCAL_COVERS_DIR, entry.coverPath);
+      if (!fs.existsSync(coverFull)) { res.writeHead(404); res.end('No cover'); return; }
+      const ext = path.extname(coverFull).toLowerCase();
+      const mime = ext === '.png' ? 'image/png' : 'image/jpeg';
+      serveStaticWithCache(res, coverFull, mime);
+    } catch (err) { console.error('[LocalMusicCover]', err); res.writeHead(500); res.end(); }
+    return;
+  }
+
+  // GET /api/local-music/:id/lyric — LRC 歌词
+  if (pn.startsWith('/api/local-music/') && pn.endsWith('/lyric') && req.method === 'GET') {
+    try {
+      const id = pn.slice('/api/local-music/'.length, -'/lyric'.length);
+      const index = loadLocalMusicIndex();
+      const entry = (index.files || []).find(f => f && f.id === id);
+      if (!entry || !entry.hasLyric || !entry.lyricFilePath) { res.writeHead(404); res.end('No lyric'); return; }
+      if (!isPathSafe(entry.lyricFilePath, index.musicDir)) { res.writeHead(403); res.end('Forbidden'); return; }
+      if (!fs.existsSync(entry.lyricFilePath)) { res.writeHead(404); res.end('Lyric file missing'); return; }
+      const buf = fs.readFileSync(entry.lyricFilePath);
+      let text = buf.toString('utf8');
+      if (text.includes('�')) text = buf.toString('latin1');
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(text);
+    } catch (err) { console.error('[LocalMusicLyric]', err); res.writeHead(500); res.end(); }
+    return;
+  }
+
+  // PATCH /api/local-music/:id — 更新字段
+  if (pn.startsWith('/api/local-music/') && req.method === 'PATCH') {
+    try {
+      const id = pn.slice('/api/local-music/'.length);
+      const index = loadLocalMusicIndex();
+      const entry = (index.files || []).find(f => f && f.id === id);
+      if (!entry) { sendJSON(res, { ok: false, error: 'NOT_FOUND', message: '歌曲不在索引中' }, 404); return; }
+      const body = await readRequestBody(req);
+      if (Object.prototype.hasOwnProperty.call(body, 'liked')) entry.liked = !!body.liked;
+      if (Object.prototype.hasOwnProperty.call(body, 'playCount')) entry.playCount = Number(body.playCount) || 0;
+      saveLocalMusicIndex(index);
+      sendJSON(res, { ok: true, id });
+    } catch (err) { console.error('[LocalMusicPatch]', err); sendJSON(res, { ok: false, error: err.message }, 500); }
     return;
   }
 
