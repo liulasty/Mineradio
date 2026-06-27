@@ -2506,6 +2506,7 @@ html.control-glass-svg-ok #visual-guide-btn:hover{
     <span class="lm-header-dir" id="lm-dir-text">未设置目录</span>
     <button class="lm-btn" id="lm-select-dir-btn" onclick="selectMusicDir()">选择目录</button>
     <button class="lm-btn primary" id="lm-scan-btn" onclick="scanLocalMusic()">扫描</button>
+    <button class="lm-btn" id="lm-fetch-btn" onclick="fetchMissingResources()">补齐</button>
     <button class="lm-btn" id="lm-close-btn" onclick="closeLocalMusicPage()">关闭</button>
   </div>
   <div class="lm-search-bar">
@@ -16114,12 +16115,36 @@ function openLocalMusicPage() {
   document.body.classList.add('local-music-open');
   loadLocalMusicIndex();
 }
+var localFetchPoll = null;
+async function fetchMissingResources() {
+  var btn = document.getElementById('lm-fetch-btn');
+  if (btn) btn.disabled = true;
+  try {
+    var resp = await fetch('/api/local-music/fetch-missing', { method: 'POST' });
+    var data = await resp.json();
+    if (data.status !== 'started') { showToast(data.message || '启动失败'); if (btn) btn.disabled = false; return; }
+  } catch (e) { showToast('启动失败'); if (btn) btn.disabled = false; return; }
+  showToast('正在补齐封面与歌词...');
+  localFetchPoll = setInterval(async function() {
+    try {
+      var r = await fetch('/api/local-music/fetch-missing', { method: 'GET' });
+      var st = await r.json();
+      if (st.complete) {
+        clearInterval(localFetchPoll); localFetchPoll = null;
+        if (btn) btn.disabled = false;
+        loadLocalMusicIndex();
+        showToast('补齐完成: ' + (st.fetched || 0) + '/' + (st.total || 0) + (st.errors ? ' (' + st.errors + ' 错误)' : ''));
+      }
+    } catch (e) { clearInterval(localFetchPoll); localFetchPoll = null; if (btn) btn.disabled = false; }
+  }, 1200);
+}
 function closeLocalMusicPage() {
   var ov = document.getElementById('local-music-overlay');
   if (ov) ov.classList.remove('show');
   document.body.classList.remove('local-music-open');
   // 清理扫描轮询定时器
   if (localScanPoll) { clearInterval(localScanPoll); localScanPoll = null; }
+  if (localFetchPoll) { clearInterval(localFetchPoll); localFetchPoll = null; }
 }
 async function selectMusicDir() {
   try {

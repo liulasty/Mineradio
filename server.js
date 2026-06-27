@@ -3256,6 +3256,7 @@ let localMusicIndexCache = null;
 let localScanJob = null; // { running, total, current, currentFile, errors, complete, newTotal }
 let localMusicWatcher = null;
 let watchDebounceTimer = null;
+let localFetchJob = null; // { running, total, current, currentFile, complete, errors, fetched }
 function normalizePath(p) {
   let resolved = path.resolve(p);
   if (process.platform === 'win32') {
@@ -3318,7 +3319,7 @@ function parseMusicMeta(meta) {
   };
 }
 function cleanName(n) {
-  return n.replace(/[（(【\[].*?[）)】\]]/g, '').replace(/\s*(live|cover|伴奏|重制|remake|remix|instrumental|片段|完整版|热播版|加长版|钢琴版|吉他版|弹唱版|女声版|男声版|抖音版|原唱)\s*/gi, '').replace(/[＿\-_－·\s]+/g, ' ').trim().toLowerCase();
+  return n.replace(/[（(【]|】|）|\)|\]|\[/g, '').replace(/\s*(live|cover|伴奏|重制|remake|remix|instrumental|片段|完整版|热播版|加长版|钢琴版|吉他版|弹唱版|女声版|男声版|抖音版|原唱)\s*/gi, '').replace(/[＿\-_－·\s]+/g, ' ').trim().toLowerCase();
 }
 function scoreLrcMatch(lrcName, titleClean, artistClean, rawParts) {
   let score = 0;
@@ -3427,6 +3428,90 @@ async function runLocalMusicScan() {
   finally { localScanJob.running = false; }
   // 扫描完成后确保监听已启动
   if (!localMusicWatcher) startLocalMusicWatch(i.musicDir);
+}
+async function runLocalFetchMissing() {
+  const index = loadLocalMusicIndex();
+  const missing = (index.files || []).filter(f => f && (!f.hasCover || !f.hasLyric));
+  if (!missing.length) { localFetchJob = { running: false, complete: true, total: 0, current: 0, currentFile: '', errors: 0, fetched: 0 }; return; }
+  ensureCoversDir();
+  localFetchJob = { running: true, total: missing.length, current: 0, currentFile: '', complete: false, errors: 0, fetched: 0 };
+  for (const entry of missing) {
+    if (!localFetchJob || !localFetchJob.running) break;
+    const meta = entry.meta || {};
+    const title = meta.title || '';
+    const artist = meta.artist || '';
+    localFetchJob.currentFile = (title || entry.filePath) + (artist ? ' - ' + artist : '');
+    localFetchJob.current++;
+    try {
+      if (!title) { localFetchJob.errors++; continue; }
+      // 搜索
+      const query = (title + (artist ? ' ' + artist : '')).replace(/[（(【]|】|）|\)|\]|\[|live|cover|伴奏|翻自|原唱|\s+/g, ' ').trim();
+      const searchResult = await search({ keywords: query, type: 1, limit: 5, cookie: userCookie || '' });
+      const songs = (searchResult && searchResult.body && searchResult.body.result && searchResult.body.result.songs) || [];
+      if (!songs.length) { localFetchJob.errors++; continue; }
+      // 选最佳匹配
+      const queryClean = title.replace(/[（(【]|】|）|\)|\]|live|cover|伴奏|翻自|原唱|\s+/g, '').toLowerCase();
+      let bestSong = songs[0], bestScore = 0;
+      for (const s of songs) {
+        let score = 0;
+        const sName = (s.name || '').replace(/[（(【]|】|）|\)|\]|live|cover|\s+/g, '').toLowerCase();
+        if (sName.includes(queryClean) || queryClean.includes(sName)) score += 10;
+        if (artist && s.artists) {
+          const sArtist = s.artists.map(a => (a.name || '').toLowerCase()).join(' ');
+          if (sArtist.includes(artist.toLowerCase())) score += 5;
+        }
+        if (score > bestScore) { bestScore = score; bestSong = s; }
+      }
+      const songId = bestSong && bestSong.id;
+      if (!songId) { localFetchJob.errors++; continue; }
+      let updated = false;
+      // 拉取歌词
+      if (!entry.hasLyric) {
+        try {
+          const lyricResult = await lyric({ id: songId, cookie: userCookie || '' });
+          const lrcText = lyricResult && lyricResult.body && lyricResult.body.lrc && lyricResult.body.lrc.lyric;
+          if (lrcText) {
+            const lrcPath = entry.filePath.replace(/\.[^.]+$/, '') + '.lrc';
+            fs.writeFileSync(lrcPath, lrcText, 'utf8');
+            entry.hasLyric = true;
+            entry.lyricFilePath = normalizePath(lrcPath);
+            updated = true;
+          }
+        } catch (e) { console.warn('[FetchMissing] lyric failed for', title, e.message); }
+      }
+      // 拉取封面
+      if (!entry.hasCover) {
+        try {
+          const detailResult = await song_detail({ ids: songId, cookie: userCookie || '' });
+          const detailSongs = detailResult && detailResult.body && detailResult.body.songs;
+          if (detailSongs && detailSongs.length) {
+            const picUrl = detailSongs[0].al && detailSongs[0].al.picUrl;
+            if (picUrl) {
+              const ext = '.jpg';
+              const coverName = entry.id + ext;
+              const coverFull = path.join(LOCAL_COVERS_DIR, coverName);
+              const resp = await fetch(picUrl);
+              if (resp.ok) {
+                const buf = Buffer.from(await resp.arrayBuffer());
+                fs.writeFileSync(coverFull, buf);
+                entry.hasCover = true;
+                entry.coverPath = coverName;
+                updated = true;
+              }
+            }
+          }
+        } catch (e) { console.warn('[FetchMissing] cover failed for', title, e.message); }
+      }
+      if (updated) localFetchJob.fetched++;
+      // 节流
+      await new Promise(r => setTimeout(r, 1200));
+    } catch (e) { console.warn('[FetchMissing] failed for', title, e.message); localFetchJob.errors++; }
+  }
+  if (localFetchJob) {
+    saveLocalMusicIndex(index);
+    localFetchJob.complete = true;
+    localFetchJob.running = false;
+  }
 }
 function startLocalMusicWatch(dir) {
   if (!dir || !fs.existsSync(dir)) return;
@@ -4447,7 +4532,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // GET /api/local-music/list// GET /api/local-music/scan/status — 扫描进度
+  // GET /api/local-music/scan/status — 扫描进度
   if (pn === "/api/local-music/scan/status" && req.method === "GET") {
     const job = localScanJob;
     if (!job) { sendJSON(res, { running: false, complete: false }); return; }
@@ -4455,7 +4540,21 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // GET /api/local-music/list// GET /api/local-music/list — 全量索引
+  // GET /api/local-music/fetch-missing — 自动补齐封面与歌词
+  if (pn === '/api/local-music/fetch-missing' && (req.method === 'POST' || req.method === 'GET')) {
+    if (req.method === 'GET') {
+      const fj = localFetchJob;
+      if (!fj) { sendJSON(res, { running: false, complete: false }); return; }
+      sendJSON(res, { running: fj.running, complete: fj.complete, total: fj.total, current: fj.current, currentFile: fj.currentFile || '', errors: fj.errors, fetched: fj.fetched || 0 });
+      return;
+    }
+    if (localFetchJob && localFetchJob.running) { sendJSON(res, { ok: false, error: 'ALREADY_RUNNING', message: '正在补齐中，请稍候' }, 409); return; }
+    runLocalFetchMissing();
+    sendJSON(res, { ok: true, status: 'started' });
+    return;
+  }
+
+  // GET /api/local-music/list — 全量索引
   if (pn === '/api/local-music/list' && req.method === 'GET') {
     const index = loadLocalMusicIndex();
     sendJSON(res, { ok: true, dir: index.musicDir, files: index.files || [] });
