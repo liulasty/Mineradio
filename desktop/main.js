@@ -1289,6 +1289,16 @@ ipcMain.handle('mineradio-desktop-lyrics-move-by', async (_event, dx, dy) => {
   }
 });
 
+ipcMain.handle('select-music-directory', async (event) => {
+  const owner = getSenderWindow(event);
+  const result = await dialog.showOpenDialog(owner, {
+    title: '选择本地音乐文件夹',
+    properties: ['openDirectory'],
+  });
+  if (result.canceled || !result.filePaths || !result.filePaths[0]) return { ok: false, canceled: true };
+  return { ok: true, dir: result.filePaths[0] };
+});
+
 ipcMain.handle('mineradio-wallpaper-set-enabled', async (_event, enabled, payload) => {
   try {
     if (enabled) createWallpaperWindow(payload || {});
@@ -1328,6 +1338,8 @@ async function createWindow() {
   process.env.COOKIE_FILE = path.join(app.getPath('userData'), '.cookie');
   process.env.QQ_COOKIE_FILE = path.join(app.getPath('userData'), '.qq-cookie');
   process.env.MINERADIO_UPDATE_DIR = getUpdateDownloadDir();
+  process.env.LOCAL_MUSIC_INDEX = path.join(app.getPath('userData'), 'local-music.index.json');
+  process.env.LOCAL_COVERS_DIR = path.join(app.getPath('userData'), 'local-covers');
   try {
     const legacyQQCookie = path.join(__dirname, '..', '.qq-cookie');
     if (fs.existsSync(legacyQQCookie)) {
@@ -1371,7 +1383,6 @@ async function createWindow() {
     shell.openExternal(url);
     return { action: 'deny' };
   });
-
   mainWindow.webContents.once('did-finish-load', () => {
     sendWindowState(mainWindow);
   });
